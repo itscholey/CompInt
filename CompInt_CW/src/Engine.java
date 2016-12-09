@@ -12,10 +12,11 @@ import adt.DataSet;
 public class Engine {
 
 	private DataSet<Double> data;
+	private ArrayList<Double> actualValues;
 	private Scanner scanner;
 	// operations
 	private DataSet<String> population;
-	private static final String[] OPERATERS = { "+", "-", "*" };
+	private static final String[] OPERATORS = { "+", "-", "*", "/" };
 	private static final int POPULATION_SIZE = 50;
 	private ScriptEngine scriptEngine;
 	
@@ -32,6 +33,8 @@ public class Engine {
 	
 	private void setupData(File file) {
 		data = new DataSet<>();
+		actualValues = new ArrayList<>();
+		
 		try {
 			scanner = new Scanner(file);
 		}
@@ -47,9 +50,14 @@ public class Engine {
 			line = scanner.nextLine();
 			// set up line as double values
 			String[] tokens = line.split(",");
-			Double[] components = new Double[tokens.length];
+			Double[] components = new Double[tokens.length-1];
+			
 			for (int pos = 0; pos < tokens.length; pos++) {
-				components[pos] = Double.parseDouble(tokens[pos]);	
+				if (pos > 0) { 
+					components[pos-1] = Double.parseDouble(tokens[pos]);	
+				} else {
+					actualValues.add(Double.parseDouble(tokens[0]));
+				}
 			}
 			countNodes++;
 			data.add(components);
@@ -94,11 +102,11 @@ public class Engine {
 	
 	private String[] randomExpression() {
 		
-		Random r = new Random(362);
-		String[] result = new String[data.getDataLength()-2];
+		Random r = new Random();
+		String[] result = new String[data.getDataLength()-1];
 		
-		for (int i = 0; i < data.getDataLength()-2; i++) {
-			result[i] = OPERATERS[r.nextInt(OPERATERS.length)];
+		for (int i = 0; i < data.getDataLength()-1; i++) {
+			result[i] = OPERATORS[r.nextInt(OPERATORS.length)];
 		}
 		
 		return result;
@@ -106,26 +114,41 @@ public class Engine {
 	
 	private String[] buildExpression(String[] ops, int index) {
 		
-		String[] expr = new String[ops.length + data.getDataLength() - 1];
+		String[] expr = new String[ops.length + data.getDataLength()];
 		Double[] values = data.getData(index);
 		System.out.println("expr " + expr.length + " values " + values.length + " ops " + ops.length);
 		
 		int op = 0;
-		int num = 1;
+		int num = 0;
 		
-		for (int i = 0; i < ((data.getDataLength()-1)*2)-1; i++) {
+		// create expression with operands and operators
+		for (int i = 0; i < (data.getDataLength()*2)-1; i++) {
 			if (i%2 == 0) {
 				expr[i] = String.valueOf(values[num]);
 				num++;
 			} else {
-				if (i < ((data.getDataLength()-1)*2)-1) {
+				if (i < (data.getDataLength()*2)-1) {
 					expr[i] = ops[op];
 					op++;
 				}
 			}
 		}
 		
-		evaluateExpression(expr);
+		// ensure no x/0 or x*0
+		for (int i = 0; i < expr.length; i++)
+		{
+			if ((expr[i] == "*" || expr[i] == "/")
+					&& ((Double.valueOf(expr[i-1]) == 0.0 && Double.valueOf(expr[i+1]) == 0.0) 
+							|| (Double.valueOf(expr[i-1]) == 0.0) 
+							|| (Double.valueOf(expr[i+1]) == 0.0))) {
+				expr[i] = "+";
+			}
+		}
+		
+		
+		
+		Double result = evaluateExpression(expr);
+		System.out.println("Result: " + result);
 		return expr;
 	}
 
@@ -145,15 +168,15 @@ public class Engine {
 		}
 		System.out.println(strExpr);
 		
+		Object result = null;
 		try {
-			Object result = scriptEngine.eval(strExpr);
-			System.out.println("Result = " + result);
+			result = scriptEngine.eval(strExpr);
 		} catch (ScriptException e) {
 			e.printStackTrace();
 		}
 		
 		
-		return null;
+		return Double.valueOf(result.toString());
 	}
 
 
