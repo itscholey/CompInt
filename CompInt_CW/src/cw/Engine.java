@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -18,7 +19,6 @@ public class Engine {
 	private Scanner scanner;
 	// operations
 	private ArrayList<Expression> population;
-	private static final String[] OPERATORS = { "+", "-", "*" };
 	private static final int POPULATION_SIZE = 10;
 	private static final int TOURNAMENT_SIZE = 5;
 	private ScriptEngine scriptEngine;
@@ -46,6 +46,9 @@ public class Engine {
 		
 		// REPEAT UNTIL ( termination condition IS satisfied ) DO
 		for (int i = 0; i < GENERATIONS; i++) {
+			
+			System.out.println("Generation " + i + "\n");
+			
 			// evaluate candidates & find parents
 			ArrayList<Expression> parents = tournament();
 			Collections.sort(parents);
@@ -74,10 +77,11 @@ public class Engine {
 			tournamentPopulation.add(population.get(r.nextInt(population.size())));
 		}
 		
-		winners.add(findBest(population));
+		// elitism
+		winners.add(findBest(population, 1).get(0));
 		
 		for (int i = 1; i < NUM_PARENTS; i++) {
-			winners.add(findBest(tournamentPopulation)); 
+			winners.add(findBest(tournamentPopulation, NUM_PARENTS).get(i)); 
 		}
 		return winners;
 	}
@@ -85,16 +89,28 @@ public class Engine {
 	private void newGeneration(final ArrayList<Expression> parents) {
 		
 		population.clear();
-		population.add(parents.get(0)); // add best parent
-		Random r = new Random();
-		int num = 0;
+		HashSet<Expression> newGen = new HashSet<>();
+		newGen.add(parents.get(0)); // add best parent
+		int num = 1;
 		
-		for (int i = 0; i < POPULATION_SIZE; i++)
+		System.out.println("Best Parent : " + parents.get(0).getFitness());
+		
+		for (int i = 1; i < POPULATION_SIZE; i++)
 		{
-			population.add(mutateByChange(parents.get(num)));
+			boolean unique = false;
+			while (!unique) {
+				unique = newGen.add(parents.get(num).mutateByChange().mutateByChange());
+			}
+			num++;
+			num = num%NUM_PARENTS;
 		}
-		num++;
-		num = num%NUM_PARENTS;
+		
+		population.addAll(newGen);
+		
+		for (int i = 0; i < POPULATION_SIZE; i++) {
+			population.get(i).setFitness(getFitnessOfExpression(i));
+			System.out.println(population.get(i).toString());
+		}
 	}
 	
 	
@@ -105,7 +121,7 @@ public class Engine {
 		population = new ArrayList<>();
 		
 		for (int i = 0; i < POPULATION_SIZE; i++) {
-			population.add(new Expression(randomOperators()));
+			population.add(new Expression(data.getDataLength()-1));
 			population.get(i).setFitness(Math.abs(getFitnessOfExpression(i)));
 		}
 		String result = "";
@@ -120,26 +136,7 @@ public class Engine {
 			result += "]\n";
 		}
 		
-		for (int i = 0; i < POPULATION_SIZE; i++) {
-			
-		}
-		
-		System.out.println("Size = " + population.size() + "\n" + result);	
-	}
-	
-	/**
-	 * Generate a random string of operators.
-	 * 
-	 * @return A String[] containing the random operators.
-	 */
-	private String[] randomOperators() {
-		Random r = new Random();
-		String[] result = new String[data.getDataLength()-1];
-		
-		for (int i = 0; i < data.getDataLength()-1; i++) {
-			result[i] = OPERATORS[r.nextInt(OPERATORS.length)];
-		}
-		return result;
+		//System.out.println("Size = " + population.size() + "\n" + result);	
 	}
 	
 	/**
@@ -211,7 +208,6 @@ public class Engine {
 		} catch (ScriptException e) {
 			e.printStackTrace();
 		}
-		
 		return Double.valueOf(result.toString());
 	}
 
@@ -230,32 +226,21 @@ public class Engine {
 		
 		fitness = (fitness / data.size());
 		
-		System.out.println("Fitness for operator set " + operatorSet + " is " + fitness);
-		
-		System.out.println(fitnesses);
-		
+		//System.out.println("Fitness for operator set " + operatorSet + " is " + fitness);
+		//System.out.println(fitnesses);
 		return fitness;
 	}
 	
-	private Expression findBest(ArrayList<Expression> pop)
-	{		
+	private ArrayList<Expression> findBest(ArrayList<Expression> pop, int num) {		
 		Collections.sort(pop);
-		
-		Expression best = pop.get(0);
-		
-		System.out.println("Best = " + pop.get(0).getFitness());
+		ArrayList<Expression> best = new ArrayList<>();
+		String s = "";
+		for (int i = 0; i < num; i++) {
+			best.add(pop.get(i));
+			s += "Best " + i + " = " + best.get(i).getFitness() + "\n";
+		}
+		System.out.println(s);
 		return best;
-	}
-	
-	private Expression mutateByChange(Expression expr) {
-		Random r = new Random();
-		int toSwap = r.nextInt(expr.getExpression().length);
-		String[] swapped = expr.getExpression();
-		swapped[toSwap] = OPERATORS[r.nextInt(OPERATORS.length)];
-		
-		expr.setExpression(swapped);
-		
-		return expr;
 	}
 	
 	/** 
@@ -297,5 +282,4 @@ public class Engine {
 		}
 		//System.out.println(data.toString());
 	}
-	
 }

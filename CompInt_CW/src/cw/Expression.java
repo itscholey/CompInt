@@ -1,11 +1,18 @@
 package cw;
 
+import java.util.Random;
+
 public class Expression implements Comparable<Expression> {
+	private static final String[] OPERATORS = { "+", "-", "*" };
 	private String[] expression;
 	private Double fitness;
 	
 	public Expression(String[] expr) {
 		expression = expr;
+	}
+	
+	public Expression(int length) {
+		randomExpression(length);
 	}
 	
 	public void setExpression(String[] expr) {
@@ -42,4 +49,45 @@ public class Expression implements Comparable<Expression> {
             return 0;
         }
     }
+	
+	public Expression mutateByChange() {
+		Random r = new Random();
+		int toSwap = r.nextInt(expression.length);
+		String[] swapped = getExpression();
+		swapped[toSwap] = OPERATORS[r.nextInt(OPERATORS.length)];
+		
+		setExpression(swapped);
+		
+		return this;
+	}
+	
+	public static String getRandomOperator() {
+		Random r = new Random();
+		String result = OPERATORS[r.nextInt(OPERATORS.length)];
+		return result;
+	}
+	
+	/**
+	 * Generate a random string of operators.
+	 * 
+	 * @return A String[] containing the random operators.
+	 */
+	public void randomExpression(int length) {
+		expression = new String[length];
+		
+		for (int i = 0; i < length; i++) {
+			expression[i] = Expression.getRandomOperator();
+		}
+	}
+	
+	public String toString() {
+		String s = "Values: ";
+		
+		for (int i = 0; i < expression.length; i++) {
+			s += expression[i] + " ";
+		}
+		s += fitness;
+		
+		return s;
+	}
 }
