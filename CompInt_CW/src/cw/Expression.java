@@ -1,6 +1,8 @@
 package cw;
 
+import java.util.Comparator;
 import java.util.Random;
+import java.lang.Math;
 
 public class Expression implements Comparable<Expression> {
 	private static final String[] OPERATORS = { "+", "-", "*" };
@@ -8,7 +10,7 @@ public class Expression implements Comparable<Expression> {
 	private Double fitness;
 	
 	public Expression(String[] expr) {
-		expression = expr;
+		this.expression = expr;
 	}
 	
 	public Expression(int length) {
@@ -39,22 +41,44 @@ public class Expression implements Comparable<Expression> {
 	}
 	
 	public int compareTo(Expression otherExpr) {
-        if (fitness < otherExpr.getFitness()) {
-            return -1;
-        }
-        else if (fitness > otherExpr.getFitness()) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
+		Double ftns = Math.abs(fitness);
+		Double otrftns = Math.abs(otherExpr.getFitness());
+		return ftns.compareTo(otrftns);
     }
 	
+	public static Comparator<Expression> ExpressionComparator
+    = new Comparator<Expression>() {
+
+		public int compare(Expression expr1, Expression expr2) {
+
+			Double exprFit1 = Math.abs(expr1.getFitness());
+			Double exprFit2 = Math.abs(expr2.getFitness());
+
+			//ascending
+			return exprFit1.compareTo(exprFit2);
+
+			//descending
+			//return exprFit2.compareTo(exprFit1);
+		}
+	
+	};
+	
+  public boolean equals(Object obj) {
+	    if (!(obj instanceof Expression)) {
+	      return false;
+	    }
+	    Expression emp = (Expression) obj;
+	    return fitness.equals(emp.getFitness());
+	  }
+	  
 	public Expression mutateByChange() {
 		Random r = new Random();
-		int toSwap = r.nextInt(expression.length);
 		String[] swapped = getExpression();
-		swapped[toSwap] = OPERATORS[r.nextInt(OPERATORS.length)];
+		
+		for (int i = 0; i < 3; i++) {
+			int toSwap = r.nextInt(expression.length);
+			swapped[toSwap] = OPERATORS[r.nextInt(OPERATORS.length)];
+		}
 		
 		setExpression(swapped);
 		

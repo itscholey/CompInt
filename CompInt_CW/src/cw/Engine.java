@@ -34,7 +34,7 @@ public class Engine {
 		ScriptEngineManager sem = new ScriptEngineManager();
 	    scriptEngine = sem.getEngineByName("JavaScript");
 		setupData(new File("C:/Users/Chloe/Downloads/cwk_test.csv"));
-		evolutionaryAlgorithm();
+		evolutionaryAlgorithm();		
 	}
 	
 
@@ -47,70 +47,96 @@ public class Engine {
 		// REPEAT UNTIL ( termination condition IS satisfied ) DO
 		for (int i = 0; i < GENERATIONS; i++) {
 			
-			System.out.println("Generation " + i + "\n");
+			System.out.println("------------------- Generation " + i + " --------------------\n");	
+			
+			System.out.println("Population:");
+			Collections.sort(population);
+			for (int j = 0; j < population.size(); j++) {
+				System.out.println(population.get(j).toString());
+			}
 			
 			// evaluate candidates & find parents
+			System.out.println("Tournament");
 			ArrayList<Expression> parents = tournament();
-			Collections.sort(parents);
+			//Collections.sort(parents);
+			System.out.println("\nParents Ordered size: " + parents.size());
+			for (int j = 0; j < parents.size(); j++) {
+				System.out.println(parents.get(j).toString());
+			}
 			// recombine pairs of parents
-			
+			System.out.println();
 			
 			// mutate offspring
+			System.out.println("New Generation");
 			newGeneration(parents);
 			
 			// evaluate new candidates
 			
 			
 			// select individuals for next gen
-			
+			System.out.println("-------------- Generation Over -------------------");
 			
 		}
 	}	
 
 	private ArrayList<Expression> tournament() {
-		
+		System.out.println("---------- Starting Tournament ------------");
 		ArrayList<Expression> winners = new ArrayList<>();
 		ArrayList<Expression> tournamentPopulation = new ArrayList<>();
+		HashSet<Integer> toChoose = new HashSet<>();
 		Random r = new Random();
 		
-		for (int i = 0; i < TOURNAMENT_SIZE; i++) {
+		Collections.sort(population);
+		tournamentPopulation.add(new Expression(population.get(0).getExpression()));
+		tournamentPopulation.get(0).setFitness(getFitnessOfExpression(0));
+		boolean unique = false;
+		
+		for (int i = 0; i < TOURNAMENT_SIZE-1; i++) {
+			while (!unique) {
+				if (toChoose.add(r.nextInt(population.size()))) {
+					unique = true;
+				}
+			}
 			tournamentPopulation.add(population.get(r.nextInt(population.size())));
 		}
-		
 		// elitism
-		winners.add(findBest(population, 1).get(0));
-		
-		for (int i = 1; i < NUM_PARENTS; i++) {
-			winners.add(findBest(tournamentPopulation, NUM_PARENTS).get(i)); 
-		}
+		//winners.add(findBest(population, 1).get(0));
+		winners.addAll(findBest(tournamentPopulation, NUM_PARENTS));
+		System.out.println("Winners : " + winners.size());
+		System.out.println("-------------- Done Tournament ------------- ");
 		return winners;
 	}
 	
 	private void newGeneration(final ArrayList<Expression> parents) {
+		System.out.println("-------- Create New Generation ----------");
+		Collections.sort(parents);
+		
+		ArrayList<Expression> newGen = new ArrayList<>();
+
+		for (int i = 0; i < POPULATION_SIZE; i++)
+		{
+			if (i < parents.size()) {
+				newGen.add(parents.get(i)); // add best parent
+			}
+			else {
+				String[] expr = parents.get(0).getExpression();
+				
+				newGen.add(new Expression(expr));
+				newGen.get(i).mutateByChange();
+			}
+		}
 		
 		population.clear();
-		HashSet<Expression> newGen = new HashSet<>();
-		newGen.add(parents.get(0)); // add best parent
-		int num = 1;
-		
-		System.out.println("Best Parent : " + parents.get(0).getFitness());
-		
-		for (int i = 1; i < POPULATION_SIZE; i++)
-		{
-			boolean unique = false;
-			while (!unique) {
-				unique = newGen.add(parents.get(num).mutateByChange().mutateByChange());
-			}
-			num++;
-			num = num%NUM_PARENTS;
-		}
-		
 		population.addAll(newGen);
-		
-		for (int i = 0; i < POPULATION_SIZE; i++) {
+		for (int i = 0; i < population.size(); i++) {
 			population.get(i).setFitness(getFitnessOfExpression(i));
+		}
+		Collections.sort(population);
+		for (int i = 0; i < population.size(); i++) {
 			System.out.println(population.get(i).toString());
 		}
+		
+		System.out.println("----------- Done New Generation ----------");
 	}
 	
 	
@@ -118,6 +144,7 @@ public class Engine {
 	 * Initialise the population.
 	 */
 	private void initialise() {
+		System.out.println("----------------Initialising----------------");
 		population = new ArrayList<>();
 		
 		for (int i = 0; i < POPULATION_SIZE; i++) {
@@ -131,11 +158,11 @@ public class Engine {
 			for (int j = 0; j < population.get(i).size(); j++)
 			{
 				result += population.get(i).getExpressionPart(j) + "  ";
-				int length = String.valueOf(population.get(i).getExpressionPart(j)).length();
 			}
 			result += "]\n";
 		}
 		
+		System.out.println("---------- Done Initialising -----------");
 		//System.out.println("Size = " + population.size() + "\n" + result);	
 	}
 	
@@ -232,14 +259,22 @@ public class Engine {
 	}
 	
 	private ArrayList<Expression> findBest(ArrayList<Expression> pop, int num) {		
+		System.out.println("----------- Find Best --------------");
+		System.out.println("Find the best out of:");
 		Collections.sort(pop);
+		
+		for (int i = 0; i < pop.size(); i++) {
+			System.out.println(pop.get(i).toString());
+		}
+ 		
 		ArrayList<Expression> best = new ArrayList<>();
-		String s = "";
+		String s = "The best are: \n";
 		for (int i = 0; i < num; i++) {
 			best.add(pop.get(i));
 			s += "Best " + i + " = " + best.get(i).getFitness() + "\n";
 		}
 		System.out.println(s);
+		System.out.println("------------- Done Find Best ----------------");
 		return best;
 	}
 	
@@ -275,10 +310,6 @@ public class Engine {
 			
 			countNodes++;
 			data.add(components);
-		}
-		System.out.println("Total nodes = " + countNodes);
-		for (int i = 0; i < actualValues.size(); i++) {
-			System.out.println(actualValues.get(i));
 		}
 		//System.out.println(data.toString());
 	}
