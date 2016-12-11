@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.lang.Math;
 
-public class Expression implements Comparable<Expression> {
+public class Expression implements Comparable<Expression>, Cloneable {
 	private static final String[] OPERATORS = { "+", "-", "*" };
 	private String[] expression;
 	private Double fitness;
@@ -139,5 +139,18 @@ public class Expression implements Comparable<Expression> {
 		s += fitness;
 		
 		return s;
+	}
+	
+	public Expression clone() {
+		final Expression clone;
+		try {
+			clone = (Expression) super.clone();
+		}
+		catch (CloneNotSupportedException e) {
+			throw new RuntimeException("Cannot clone.", e);
+		}
+		clone.setExpression(this.expression.clone());
+		clone.setFitness(this.fitness);
+		return clone;
 	}
 }
