@@ -1,6 +1,8 @@
 package cw;
 
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Random;
 import java.lang.Math;
 
@@ -15,6 +17,9 @@ public class Expression implements Comparable<Expression> {
 	
 	public Expression(int length) {
 		randomExpression(length);
+	}
+	
+	public Expression() {
 	}
 	
 	public void setExpression(String[] expr) {
@@ -62,14 +67,6 @@ public class Expression implements Comparable<Expression> {
 		}
 	
 	};
-	
-  public boolean equals(Object obj) {
-	    if (!(obj instanceof Expression)) {
-	      return false;
-	    }
-	    Expression emp = (Expression) obj;
-	    return fitness.equals(emp.getFitness());
-	  }
 	  
 	public Expression mutateByChange() {
 		Random r = new Random();
@@ -104,6 +101,35 @@ public class Expression implements Comparable<Expression> {
 		}
 	}
 	
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(expression);
+		result = prime * result + ((fitness == null) ? 0 : fitness.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Expression other = (Expression) obj;
+		if (!Arrays.equals(expression, other.expression))
+			return false;
+		if (fitness == null) {
+			if (other.fitness != null)
+				return false;
+		} else if (!fitness.equals(other.fitness))
+			return false;
+		return true;
+	}
+
 	public String toString() {
 		String s = "Values: ";
 		

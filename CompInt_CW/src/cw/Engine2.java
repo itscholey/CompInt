@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -32,6 +35,45 @@ public class Engine2 {
 		System.out.println("------------- Initialise ------------");
 		initialise();
 		System.out.println("--------- Done Initialising ---------");
+		
+		//System.out.println("Best in generation: " + getBestExpression(population));
+
+		/*System.out.println("Two Opt of : " + population.get(0));
+		ArrayList<Expression> nbhd = twoOptNeighbourhood(population.get(0));
+		bestNeighbour(nbhd);*/
+		
+		localSearch();
+	}
+	
+	
+	private Expression localSearch() {
+		int iterations = 0;
+		int seconds = 5;
+		
+		Collections.sort(population);
+		Expression expr = new Expression(population.get(0).getExpression().clone());
+		expr.setFitness(getExpressionAverage(expr));
+		Expression best = new Expression(expr.getExpression().clone());
+		best.setFitness(getExpressionAverage(expr));
+		long time = System.currentTimeMillis() + (seconds*1000);
+		
+		while(System.currentTimeMillis() < time) {
+			System.out.println("\nGeneration: " + iterations + "\nTwo Opt of : " + expr.toString());
+			ArrayList<Expression> nbhd = twoOptNeighbourhood(expr);
+			expr = bestNeighbour(nbhd);
+			System.out.println("Best neighbour: " + expr.toString());
+			
+			if (Math.abs(expr.getFitness()) < Math.abs(best.getFitness())) {
+				best.setExpression(expr.getExpression().clone());
+				best.setFitness(getExpressionAverage(best));
+				System.out.println("*** New Best *** " + best.toString());
+			}
+			iterations++;
+		}
+		System.out.println("Best is " + best.toString());
+		return best;
+		
+		
 	}
 	
 	public void initialise() {
@@ -48,6 +90,50 @@ public class Engine2 {
 		
 	}
 	
+	private Expression bestNeighbour(ArrayList<Expression> nbhd) {
+		Collections.sort(nbhd);
+		System.out.println("Best: " + nbhd.get(0).toString());
+		return nbhd.get(0);
+	}
+	
+	
+	private ArrayList<Expression> twoOptNeighbourhood(final Expression expr) {
+		HashSet<Expression> nbhd = new HashSet<>();
+		String[] tmpExpr = new String[expr.getExpression().length];
+		String tmpPart = "";
+		
+		// 1, 2, 3, ...
+		for (int i = 0; i < expr.getExpression().length; i++) {
+			//System.out.println(i);
+			// 1-2, 1-3, 1-4, ...
+			for (int gap = 1; gap+i < expr.getExpression().length; gap++) {
+				tmpExpr = expr.getExpression().clone();
+				tmpPart = expr.getExpression()[i];
+				tmpExpr[i] = expr.getExpression()[i+gap];
+				tmpExpr[i+gap] = tmpPart;
+				Expression e = new Expression(tmpExpr);
+				e.setFitness(getExpressionAverage(e));
+				nbhd.add(e);
+				//System.out.println(e.toString());
+			}
+		}
+		
+		System.out.println("Neighbourhood");
+		ArrayList<Expression> result = new ArrayList<>();
+		result.addAll(nbhd);
+		Collections.sort(result);
+		
+		for (Expression e : result) {
+			System.out.println(e.toString());
+		}		
+		return result;
+	}
+	
+	private String getBestExpression(ArrayList<Expression> area) {
+		Collections.sort(area);
+		return area.get(0).toString();
+	}
+	
 	private Double getExpressionAverage(Expression expr)
 	{
 		Double fitness = 0.0;
@@ -59,10 +145,9 @@ public class Engine2 {
 			fitnesses += "Estimate: " + getExpressionResult(expressions[j]) + " Actual: " + actualValues.get(j) + " Difference: " +
 					(getExpressionResult(expressions[j]) - actualValues.get(j) + "\n");
 		}
-		
 		fitness = (fitness / data.size());
 		
-		System.out.println("Fitness is " + fitness + "\n" + fitnesses);
+		//System.out.println("Fitness is " + fitness + "\n" + fitnesses);
 		return fitness;
 	}
 	
@@ -139,5 +224,28 @@ public class Engine2 {
 			count++;
 		}
 		System.out.println(data.toString());
+	}
+	
+	private Expression randomSearch(int seconds) {
+		
+		Expression random = new Expression(12);
+		random.setFitness(getExpressionAverage(random));
+		Expression best = new Expression(random.getExpression().clone());
+		best.setFitness(getExpressionAverage(random));
+		long time = System.currentTimeMillis() + (seconds*1000);
+		
+		while(System.currentTimeMillis() < time) {
+			random.randomExpression(12);
+			random.setFitness(getExpressionAverage(random));
+			System.out.println(random.toString());
+			
+			if (Math.abs(random.getFitness()) < Math.abs(best.getFitness())) {
+				best.setExpression(random.getExpression().clone());
+				best.setFitness(getExpressionAverage(best));
+				System.out.println("*** New Best *** " + best.toString());
+			}
+		}
+		System.out.println("Best is " + best.toString());
+		return best;
 	}
 }
