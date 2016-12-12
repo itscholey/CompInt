@@ -40,7 +40,7 @@ public class Engine2 {
 	public Engine2() {
 		ScriptEngineManager sem = new ScriptEngineManager();
 	    scriptEngine = sem.getEngineByName("JavaScript");
-		setupData(new File("C:/Users/Chloe/Downloads/cwk_test.csv"));
+		setupData(new File("C:/Users/Chloe/Downloads/cwk_train.csv"));
 		evolve();
 	}
 	
