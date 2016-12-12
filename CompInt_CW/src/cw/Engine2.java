@@ -26,10 +26,12 @@ public class Engine2 {
 	private static final String	 PARENT_SELECTION = "Tournament";
 	private static final Boolean ELITISM = true;
 	private static final String  SURVIVOR_SELECTION = "Generational";
-	private static final int 	 POPULATION_SIZE = 5;
+	private static final int 	 POPULATION_SIZE = 50;
 	private static final int	 NUM_OFFSPRING = 2;
 	private static final String  INITIALISATION = "Random";
-	private static final int 	 GENERATIONS = 10;
+	private static final int 	 GENERATIONS = 100;
+	private static final Boolean REPLACEMENT_RULE = true;
+	private Random r;
 	private Scanner scanner;
 	private ScriptEngine scriptEngine;
 	
@@ -41,6 +43,7 @@ public class Engine2 {
 		ScriptEngineManager sem = new ScriptEngineManager();
 	    scriptEngine = sem.getEngineByName("JavaScript");
 		setupData(new File("C:/Users/Chloe/Downloads/cwk_train.csv"));
+		r = new Random();
 		evolve();
 	}
 	
@@ -60,8 +63,8 @@ public class Engine2 {
 		
 		// repeat until ( termination condition is satisfied ) do
 		for (int i = 0; i < GENERATIONS; i++) {
-			Collections.sort(population);
-		
+			System.out.println("------------- Generation " + i + " -----------------");
+			
 			// select parents
 			
 			
@@ -72,11 +75,64 @@ public class Engine2 {
 			// evaluate new candidates
 		
 			// select individuals for next generation
-			newGeneration(tournament());
+			//newGeneration(tournament());
+			simpleStep();
+		}
+		Collections.sort(population);
+		for (int j = 0; j < 5; j++) {
+			System.out.println("Best " + j + ": " + population.get(j).toString());
 		}
 		
 		
 	}
+	
+	@SuppressWarnings("unchecked")
+	public void simpleStep() {
+		// i
+		// while i <= oldPop.size (go through all of pop)
+		
+			// child = oldPop[i]
+			// mutate child with prob of mutation
+			// tournament of parent[i] and child with replacement rule R (t/f) if:
+				// newPop[i] = child // child wins
+			// else
+				// newPop[i] = oldPop[i] // parent wins
+			// end
+			// i++
+		// end
+		// return newPop
+		
+		ArrayList<Expression> newPop = new ArrayList<>();
+		for (int i = 0; i < population.size(); i++) {
+			// child = oldPop[i]
+			Expression child = population.get(i).clone();
+			// mutate with prob of mutation
+			if (r.nextDouble() <= MUTATION_PROBABILITY) {
+				child.mutateByChange();
+				child.setFitness(getExpressionAverage(child));
+			}
+			// tournament with replacement rule R
+			ArrayList<Expression> pool = new ArrayList<>();
+			pool.add(child);
+			pool.add(population.get(i));
+			newPop.add(bestNeighbour(pool));
+		}
+		
+		population.clear();
+		population.addAll(newPop);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	private void newGeneration(ArrayList<Expression> parents) {
@@ -182,7 +238,6 @@ public class Engine2 {
 	
 	private Expression bestNeighbour(ArrayList<Expression> nbhd) {
 		Collections.sort(nbhd);
-		System.out.println("Best: " + nbhd.get(0).toString());
 		return nbhd.get(0);
 	}
 	
