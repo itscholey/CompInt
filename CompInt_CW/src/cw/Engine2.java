@@ -17,7 +17,7 @@ public class Engine2 {
 	private DataSet<Double> data;
 	private ArrayList<Double> actualValues;
 	private ArrayList<Expression> population;
-	
+
 	private static final String  RECOMBINATION = "Order 1 Crossover";
 	private static final Double  RECOMBINATION_PROBABILITY = 1.00;
 	private static final String  MUTATION = "Swap";
@@ -35,59 +35,59 @@ public class Engine2 {
 	private Random r;
 	private Scanner scanner;
 	private ScriptEngine scriptEngine;
-	
+
 	public static void main(String[] args) {
 		new Engine2();
 	}
-		
+
 	public Engine2() {
 		ScriptEngineManager sem = new ScriptEngineManager();
-	    scriptEngine = sem.getEngineByName("JavaScript");
+		scriptEngine = sem.getEngineByName("JavaScript");
 		setupData(new File("C:/Users/Chloe/Downloads/cwk_train.csv"));
 		r = new Random();
 		evolve();
 	}
-	
+
 	public void evolve() {
 		System.out.println("------------- Initialise ------------");
 		initialise();
 		System.out.println("--------- Done Initialising ---------");
-		
+
 		//System.out.println("Best in generation: " + getBestExpression(population));
 
 		/*System.out.println("Two Opt of : " + population.get(0));
 		ArrayList<Expression> nbhd = twoOptNeighbourhood(population.get(0));
 		bestNeighbour(nbhd);
 		localSearch();*/
-		
+
 		// evaluate each candidate
-		
+
 		// repeat until ( termination condition is satisfied ) do
 		for (int i = 0; i < GENERATIONS; i++) {
 			System.out.println("------------- Generation " + i + " -----------------");
 			Collections.sort(population);
-		for (int j = 0; j < population.size(); j++) {
-			System.out.println("Best " + j + ": " + population.get(j).toString());
-		}
-		
+			for (int j = 0; j < population.size(); j++) {
+				System.out.println("Best " + j + ": " + population.get(j).toString());
+			}
+
 			// select parents
-			
-			
+
+
 			// recombine parents
-		
+
 			// mutate resulting offspring
-			
+
 			// evaluate new candidates
-		
+
 			// select individuals for next generation
 			//newGeneration(tournament());
 			simpleStep();
 		}
-		
-		
+
+
 	}
-	
-	
+
+
 	public void crowdingStep() {
 		ArrayList<Expression> parentPool = new ArrayList<>();
 		ArrayList<Expression> children = new ArrayList<>();
@@ -96,20 +96,21 @@ public class Engine2 {
 		if (parents%2 != 0) { 
 			parents++;
 		}
-		
+
 		/* ****** PHASE 1 ****** */
 		for (int i = 0; i < parents; i++) {
 			parentPool.add(population.get(i).clone());			
 		}
-		
+
 		Random r = new Random();
-		
+
 		/* ****** PHASE 2 ****** */
-		
+
 		for (int i = 0; i < parentPool.size(); i+=2) {
 			// Crossover
 			if (r.nextDouble() < RECOMBINATION_PROBABILITY) {
-				// crossover
+				// one-point crossover
+				crossover(CROSSOVER_POINT, null, null);
 			}
 			// Mutation
 			else {
@@ -119,54 +120,54 @@ public class Engine2 {
 				if (r.nextDouble() < MUTATION_PROBABILITY)	children.get(i+1).mutateByChange();
 			}
 		}
-		
-		
+
+
 		/* ****** PHASE 3 ****** */
 		for (int parent = 0; parent < parentPool.size(); parent++) {
 			for (int child = 0; child < children.size(); child++) {
-				
+
 			}
 		}
-		
-		
+
+
 		/* ****** PHASE 4 ****** */
-		
-		
-		
-		
+
+
+
+
 		/* ****** PHASE 5 ****** */
-		
+
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	@SuppressWarnings("unchecked")
 	public void simpleStep() {
 		// i
 		// while i <= oldPop.size (go through all of pop)
-		
-			// child = oldPop[i]
-			// mutate child with prob of mutation
-			// tournament of parent[i] and child with replacement rule R (t/f) if:
-				// newPop[i] = child // child wins
-			// else
-				// newPop[i] = oldPop[i] // parent wins
-			// end
-			// i++
+
+		// child = oldPop[i]
+		// mutate child with prob of mutation
+		// tournament of parent[i] and child with replacement rule R (t/f) if:
+		// newPop[i] = child // child wins
+		// else
+		// newPop[i] = oldPop[i] // parent wins
+		// end
+		// i++
 		// end
 		// return newPop
-		
+
 		ArrayList<Expression> newPop = new ArrayList<>();
 		for (int i = 0; i < population.size(); i++) {
 			// child = oldPop[i]
@@ -182,30 +183,48 @@ public class Engine2 {
 			pool.add(population.get(i));
 			newPop.add(bestNeighbour(pool));
 		}
-		
+
 		population.clear();
 		population.addAll(newPop);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
+
+	public Expression[] crossover(int crossPoint, 
+			Expression parentA, Expression parentB) {
+
+		String[] first = parentA.getExpression().clone();
+		String[] second = parentB.getExpression().clone();
+		String[] childOne = first.clone();
+		String[] childTwo = second.clone();
+		Expression[] result = new Expression[2];
+
+		for (int i = crossPoint; i < parentA.getExpression().length; i++) {
+			childOne[i] = second[i];
+			childTwo[i] = first[i];
+		}
+
+		result[0] = new Expression(childOne);
+		result[1] = new Expression(childTwo);
+
+		return result;
+	}
+
 	private void newGeneration(ArrayList<Expression> parents) {
 		System.out.println("----------- New Generation ------------ ");
 		HashSet<Expression> pool = new HashSet<>();
 		ArrayList<Expression> newGenPool = new ArrayList<>();
 		Random r = new Random();
-		
+
 		for (int i = 0; i < parents.size(); i++) {
 			pool.addAll(twoOptNeighbourhood(parents.get(i)));
 		}
@@ -220,20 +239,20 @@ public class Engine2 {
 		for (int i = index; i < POPULATION_SIZE; i++) {
 			population.add(newGenPool.get(r.nextInt(newGenPool.size())).clone());
 		}
-		
+
 		Collections.sort(population);
 		for (int i = 0; i < population.size(); i++) {
 			System.out.println(population.get(i).toString());
 		}
-		
+
 		System.out.println("------------ End of Generation --------------" );
 	}
-	
+
 	private ArrayList<Expression> tournament() {
 		System.out.println("---------- Tournament ------------");
 		ArrayList<Expression> parents = new ArrayList<>();
 		Random r = new Random();
-		
+
 		int index = 0;
 		if (ELITISM) {
 			parents.add(bestNeighbour(population).clone());
@@ -246,28 +265,28 @@ public class Engine2 {
 		for (int i = 0; i < parents.size(); i++) {
 			System.out.println(parents.get(i).toString());
 		}
-		
+
 		System.out.println("-------------- End of Tournament --------------");
 		return parents;
 	}
-	
+
 	private Expression localSearch() {
 		int iterations = 0;
 		int seconds = 50;
-		
+
 		Collections.sort(population);
 		Expression expr = new Expression(population.get(0).getExpression().clone());
 		expr.setFitness(getExpressionAverage(expr));
 		Expression best = new Expression(expr.getExpression().clone());
 		best.setFitness(getExpressionAverage(expr));
 		long time = System.currentTimeMillis() + (seconds*1000);
-		
+
 		while(System.currentTimeMillis() < time) {
 			System.out.println("\nGeneration: " + iterations + "\nTwo Opt of : " + expr.toString());
 			ArrayList<Expression> nbhd = twoOptNeighbourhood(expr);
 			expr = bestNeighbour(nbhd);
 			System.out.println("Best neighbour: " + expr.toString());
-			
+
 			if (Math.abs(expr.getFitness()) < Math.abs(best.getFitness())) {
 				best.setExpression(expr.getExpression().clone());
 				best.setFitness(getExpressionAverage(best));
@@ -278,11 +297,11 @@ public class Engine2 {
 		System.out.println("Best is " + best.toString());
 		return best;		
 	}
-	
+
 	public void initialise() {
 		population = new ArrayList<>();
 		HashSet<Expression> pop = new HashSet<>();
-		
+
 		for (int i = 0; i < POPULATION_SIZE; i++) {
 			boolean unique = false;
 			while (!unique) {
@@ -291,27 +310,27 @@ public class Engine2 {
 				}
 			}
 		}
-		
+
 		population.addAll(pop);
-		
+
 		for (int i = 0; i < population.size(); i++) {
 			population.get(i).setFitness(getExpressionAverage(population.get(i)));
 			System.out.println(population.get(i).toString());
 		}
-		
+
 	}
-	
+
 	private Expression bestNeighbour(ArrayList<Expression> nbhd) {
 		Collections.sort(nbhd);
 		return nbhd.get(0);
 	}
-	
-	
+
+
 	private ArrayList<Expression> twoOptNeighbourhood(final Expression expr) {
 		HashSet<Expression> nbhd = new HashSet<>();
 		String[] tmpExpr = new String[expr.getExpression().length];
 		String tmpPart = "";
-		
+
 		// 1, 2, 3, ...
 		for (int i = 0; i < expr.getExpression().length; i++) {
 			//System.out.println(i);
@@ -327,23 +346,23 @@ public class Engine2 {
 				//System.out.println(e.toString());
 			}
 		}
-		
+
 		//System.out.println("Neighbourhood");
 		ArrayList<Expression> result = new ArrayList<>();
 		result.addAll(nbhd);
 		Collections.sort(result);
-		
+
 		/*for (Expression e : result) {
 			System.out.println(e.toString());
 		}	*/	
 		return result;
 	}
-	
+
 	private String getBestExpression(ArrayList<Expression> area) {
 		Collections.sort(area);
 		return area.get(0).toString();
 	}
-	
+
 	private Double getExpressionAverage(Expression expr)
 	{
 		Double fitness = 0.0;
@@ -356,38 +375,38 @@ public class Engine2 {
 					(getExpressionResult(expressions[j]) - actualValues.get(j) + "\n");
 		}
 		fitness = (fitness / data.size());
-		
+
 		//System.out.println("Fitness is " + fitness + "\n" + fitnesses);
 		return fitness;
 	}
-	
+
 	private String[] buildExpression(Expression ops, int index) {
-		
+
 		String[] expr = new String[ops.size() + data.getDataLength()];
 		Double[] values = data.getData(index);		
 		int op = 0;
 		int num = 0;
-		
+
 		// create expression with operands and operators
 		for (int i = 0; i < (data.getDataLength()*2)-1; i++) {
 			if (i%2 == 0) {
 				expr[i] = String.valueOf(values[num]);
 				num++;
 			} else if (i < (data.getDataLength()*2)-1) {
-					expr[i] = ops.getExpressionPart(op);
-					op++;
+				expr[i] = ops.getExpressionPart(op);
+				op++;
 			}
 		}
 		return expr;
 	}
-	
+
 	private Double getExpressionResult(String[] expr) {
 		ArrayList<String> expression = new ArrayList<String>();
-		
+
 		for (int i = 0; i < expr.length; i++) {
 			expression.add(expr[i]);
 		}
-		
+
 		String strExpr = "";
 		for (int i = 0; i < expression.size(); i++) {
 			strExpr += expression.get(i);
@@ -395,7 +414,7 @@ public class Engine2 {
 				strExpr += " ";
 			}
 		}
-		
+
 		Object result = null;
 		try {
 			result = scriptEngine.eval(strExpr);
@@ -404,29 +423,29 @@ public class Engine2 {
 		}
 		return Double.valueOf(result.toString());
 	}
-	
+
 	private void setupData(File file) {
 		data = new DataSet<>();
 		actualValues = new ArrayList<>();
-		
+
 		try {
 			scanner = new Scanner(file);
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
+
 		String line = "";
 		int count = 0;
-		
+
 		while (scanner.hasNextLine()) {
-		//while (count < 3) {
+			//while (count < 3) {
 			line = scanner.nextLine();
 			// set up line as double values
 			String[] tokens = line.split(",");
 			Double[] components = new Double[tokens.length-1];
 			actualValues.add(Double.parseDouble(tokens[0]));
-			
+
 			for (int pos = 1; pos < tokens.length; pos++) {
 				components[pos-1] = Double.parseDouble(tokens[pos]);	
 			}
@@ -435,20 +454,20 @@ public class Engine2 {
 		}
 		System.out.println(data.toString());
 	}
-	
+
 	private Expression randomSearch(int seconds) {
-		
+
 		Expression random = new Expression(12);
 		random.setFitness(getExpressionAverage(random));
 		Expression best = new Expression(random.getExpression().clone());
 		best.setFitness(getExpressionAverage(random));
 		long time = System.currentTimeMillis() + (seconds*1000);
-		
+
 		while(System.currentTimeMillis() < time) {
 			random.randomExpression(12);
 			random.setFitness(getExpressionAverage(random));
 			System.out.println(random.toString());
-			
+
 			if (Math.abs(random.getFitness()) < Math.abs(best.getFitness())) {
 				best.setExpression(random.getExpression().clone());
 				best.setFitness(getExpressionAverage(best));
