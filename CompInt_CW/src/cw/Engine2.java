@@ -22,15 +22,16 @@ public class Engine2 {
 	private static final Double  RECOMBINATION_PROBABILITY = 1.00;
 	private static final String  MUTATION = "Swap";
 	private static final Double  MUTATION_PROBABILITY = 0.7;
-	private static final int 	 NUM_PARENTS = 2;
+	private static final int 	 NUM_PARENTS = 2;						// MIN parents = 2
 	private static final String	 PARENT_SELECTION = "Tournament";
 	private static final Boolean ELITISM = true;
 	private static final String  SURVIVOR_SELECTION = "Generational";
-	private static final int 	 POPULATION_SIZE = 50;
+	private static final int 	 POPULATION_SIZE = 100;
 	private static final int	 NUM_OFFSPRING = 2;
 	private static final String  INITIALISATION = "Random";
 	private static final int 	 GENERATIONS = 100;
 	private static final Boolean REPLACEMENT_RULE = true;
+	private static final int 	 CROSSOVER_POINT = 5;
 	private Random r;
 	private Scanner scanner;
 	private ScriptEngine scriptEngine;
@@ -64,7 +65,11 @@ public class Engine2 {
 		// repeat until ( termination condition is satisfied ) do
 		for (int i = 0; i < GENERATIONS; i++) {
 			System.out.println("------------- Generation " + i + " -----------------");
-			
+			Collections.sort(population);
+		for (int j = 0; j < population.size(); j++) {
+			System.out.println("Best " + j + ": " + population.get(j).toString());
+		}
+		
 			// select parents
 			
 			
@@ -78,13 +83,73 @@ public class Engine2 {
 			//newGeneration(tournament());
 			simpleStep();
 		}
-		Collections.sort(population);
-		for (int j = 0; j < 5; j++) {
-			System.out.println("Best " + j + ": " + population.get(j).toString());
-		}
 		
 		
 	}
+	
+	
+	public void crowdingStep() {
+		ArrayList<Expression> parentPool = new ArrayList<>();
+		ArrayList<Expression> children = new ArrayList<>();
+		Collections.shuffle(population);
+		int parents = NUM_PARENTS;
+		if (parents%2 != 0) { 
+			parents++;
+		}
+		
+		/* ****** PHASE 1 ****** */
+		for (int i = 0; i < parents; i++) {
+			parentPool.add(population.get(i).clone());			
+		}
+		
+		Random r = new Random();
+		
+		/* ****** PHASE 2 ****** */
+		
+		for (int i = 0; i < parentPool.size(); i+=2) {
+			// Crossover
+			if (r.nextDouble() < RECOMBINATION_PROBABILITY) {
+				// crossover
+			}
+			// Mutation
+			else {
+				children.add(parentPool.get(i).clone());
+				children.add(parentPool.get(i+1).clone());
+				if (r.nextDouble() < MUTATION_PROBABILITY)	children.get(i).mutateByChange();
+				if (r.nextDouble() < MUTATION_PROBABILITY)	children.get(i+1).mutateByChange();
+			}
+		}
+		
+		
+		/* ****** PHASE 3 ****** */
+		for (int parent = 0; parent < parentPool.size(); parent++) {
+			for (int child = 0; child < children.size(); child++) {
+				
+			}
+		}
+		
+		
+		/* ****** PHASE 4 ****** */
+		
+		
+		
+		
+		/* ****** PHASE 5 ****** */
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	@SuppressWarnings("unchecked")
 	public void simpleStep() {
