@@ -12,7 +12,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-public class Engine2 {
+public class Engine {
 
 	private DataSet<Double> data;
 	private ArrayList<Double> actualValues;
@@ -34,15 +34,23 @@ public class Engine2 {
 	private Scanner scanner;
 
 	public static void main(String[] args) {
-		new Engine2();
+		new Engine();
 	}
 
-	public Engine2() {
+	/**
+	 * Construct a new Engine object to initialise the program.
+	 */
+	public Engine() {
 		setupData(new File(TRAIN_FILE));
 		r = new Random();
 		evolve(1); // IN evolutionary_method
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param method The evolutionary/genetic method to use, @see
+	 */
 	public void evolve(int method) {
 		System.out.println("------------- Initialise ------------");
 		initialise();
