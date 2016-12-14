@@ -18,51 +18,43 @@ public class Engine2 {
 	private ArrayList<Double> actualValues;
 	private ArrayList<Expression> population;
 
-	private static final String  RECOMBINATION = "Order 1 Crossover";
-	private static final Double  RECOMBINATION_PROBABILITY = 1.00;
-	private static final String  MUTATION = "Swap";
-	private static final Double  MUTATION_PROBABILITY = 0.7;
-	private static final int 	 NUM_PARENTS = 2;						// MIN parents = 2
-	private static final String	 PARENT_SELECTION = "Tournament";
-	private static final Boolean ELITISM = true;
-	private static final String  SURVIVOR_SELECTION = "Generational";
-	private static final int 	 POPULATION_SIZE = 100;
-	private static final int	 NUM_OFFSPRING = 2;
-	private static final String  INITIALISATION = "Random";
-	private static final int 	 GENERATIONS = 100;
-	private static final Boolean REPLACEMENT_RULE = true;
-	private static final int 	 CROSSOVER_POINT = 5;
+	private static final Double  	RECOMBINATION_PROBABILITY = 1.00;
+	private static final Double  	MUTATION_PROBABILITY = 0.7;
+	private static final int 		NUM_PARENTS = 4;						// MIN parents = 2
+	private static final String[]	EVOLUTIONARY_METHOD = {"twoOptGeneration", "simpleStep", "crowdingStep", "localSearch", "randomSearch"};
+	private static final Boolean 	ELITISM = true;
+	private static final String  	SURVIVOR_SELECTION = "Generational";
+	private static final int 	 	POPULATION_SIZE = 100;
+	private static final int 	 	GENERATIONS = 100;
+	private static final int 	 	CROSSOVER_POINT = 5;
+	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
+	private static final String  	TEST_FILE = "C:/Users/Chloe/Downloads/cwk_test.csv";
+	private static final int		SECONDS = 10;
 	private Random r;
 	private Scanner scanner;
-	private ScriptEngine scriptEngine;
 
 	public static void main(String[] args) {
 		new Engine2();
 	}
 
 	public Engine2() {
-		ScriptEngineManager sem = new ScriptEngineManager();
-		scriptEngine = sem.getEngineByName("JavaScript");
-		setupData(new File("C:/Users/Chloe/Downloads/cwk_train.csv"));
+		setupData(new File(TRAIN_FILE));
 		r = new Random();
-		evolve();
+		evolve(1); // IN evolutionary_method
 	}
 
-	public void evolve() {
+	public void evolve(int method) {
 		System.out.println("------------- Initialise ------------");
 		initialise();
 		System.out.println("--------- Done Initialising ---------");
+		Collections.sort(population);
+		System.out.println("Best in generation: " + getBestExpression(population));
 
-		//System.out.println("Best in generation: " + getBestExpression(population));
-
-		/*System.out.println("Two Opt of : " + population.get(0));
-		ArrayList<Expression> nbhd = twoOptNeighbourhood(population.get(0));
-		bestNeighbour(nbhd);
-		localSearch();*/
 
 		// evaluate each candidate
 
 		// repeat until ( termination condition is satisfied ) do
+		
 		for (int i = 0; i < GENERATIONS; i++) {
 			System.out.println("------------- Generation " + i + " -----------------");
 			Collections.sort(population);
@@ -70,23 +62,25 @@ public class Engine2 {
 				System.out.println("Best " + j + ": " + population.get(j).toString());
 			}
 
-			// select parents
-
-
-			// recombine parents
-
-			// mutate resulting offspring
-
-			// evaluate new candidates
-
-			// select individuals for next generation
-			//newGeneration(tournament());
-			simpleStep();
+			switch(method) 
+			{
+			case 0: twoOptGeneration(tournament());
+			case 1: simpleStep();
+			//case 2: crowdingStep();
+			case 3: localSearch();
+			case 4: randomSearch();
+			default: randomSearch();
+			}
+			
+			Collections.sort(population);
+			for (int j = 0; j < 5; j++) {
+				System.out.println("Best " + j + ": " + population.get(j).toString());
+			}
+			
 		}
 
 
 	}
-
 
 	public void crowdingStep() {
 		ArrayList<Expression> parentPool = new ArrayList<>();
@@ -102,15 +96,13 @@ public class Engine2 {
 			parentPool.add(population.get(i).clone());			
 		}
 
-		Random r = new Random();
-
 		/* ****** PHASE 2 ****** */
 
 		for (int i = 0; i < parentPool.size(); i+=2) {
 			// Crossover
 			if (r.nextDouble() < RECOMBINATION_PROBABILITY) {
 				// one-point crossover
-				crossover(CROSSOVER_POINT, null, null);
+				children.addAll(crossover(CROSSOVER_POINT, parentPool.get(i), parentPool.get(i+1)));
 			}
 			// Mutation
 			else {
@@ -121,7 +113,6 @@ public class Engine2 {
 			}
 		}
 
-
 		/* ****** PHASE 3 ****** */
 		for (int parent = 0; parent < parentPool.size(); parent++) {
 			for (int child = 0; child < children.size(); child++) {
@@ -129,101 +120,15 @@ public class Engine2 {
 			}
 		}
 
-
 		/* ****** PHASE 4 ****** */
-
-
-
 
 		/* ****** PHASE 5 ****** */
 
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-	@SuppressWarnings("unchecked")
-	public void simpleStep() {
-		// i
-		// while i <= oldPop.size (go through all of pop)
-
-		// child = oldPop[i]
-		// mutate child with prob of mutation
-		// tournament of parent[i] and child with replacement rule R (t/f) if:
-		// newPop[i] = child // child wins
-		// else
-		// newPop[i] = oldPop[i] // parent wins
-		// end
-		// i++
-		// end
-		// return newPop
-
-		ArrayList<Expression> newPop = new ArrayList<>();
-		for (int i = 0; i < population.size(); i++) {
-			// child = oldPop[i]
-			Expression child = population.get(i).clone();
-			// mutate with prob of mutation
-			if (r.nextDouble() <= MUTATION_PROBABILITY) {
-				child.mutateByChange();
-				child.setFitness(getExpressionAverage(child));
-			}
-			// tournament with replacement rule R
-			ArrayList<Expression> pool = new ArrayList<>();
-			pool.add(child);
-			pool.add(population.get(i));
-			newPop.add(bestNeighbour(pool));
-		}
-
-		population.clear();
-		population.addAll(newPop);
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-	public Expression[] crossover(int crossPoint, 
-			Expression parentA, Expression parentB) {
-
-		String[] first = parentA.getExpression().clone();
-		String[] second = parentB.getExpression().clone();
-		String[] childOne = first.clone();
-		String[] childTwo = second.clone();
-		Expression[] result = new Expression[2];
-
-		for (int i = crossPoint; i < parentA.getExpression().length; i++) {
-			childOne[i] = second[i];
-			childTwo[i] = first[i];
-		}
-
-		result[0] = new Expression(childOne);
-		result[1] = new Expression(childTwo);
-
-		return result;
-	}
-
-	private void newGeneration(ArrayList<Expression> parents) {
-		System.out.println("----------- New Generation ------------ ");
+	public void twoOptGeneration(ArrayList<Expression> parents) {
 		HashSet<Expression> pool = new HashSet<>();
 		ArrayList<Expression> newGenPool = new ArrayList<>();
-		Random r = new Random();
 
 		for (int i = 0; i < parents.size(); i++) {
 			pool.addAll(twoOptNeighbourhood(parents.get(i)));
@@ -244,14 +149,55 @@ public class Engine2 {
 		for (int i = 0; i < population.size(); i++) {
 			System.out.println(population.get(i).toString());
 		}
+	}
 
-		System.out.println("------------ End of Generation --------------" );
+	public void simpleStep() {
+		ArrayList<Expression> newPop = new ArrayList<>();
+		for (int i = 0; i < population.size(); i++) {
+			// child = oldPop[i]
+			Expression child = population.get(i).clone();
+			// mutate with prob of mutation
+			if (r.nextDouble() <= MUTATION_PROBABILITY) {
+				child.mutateByChange();
+				child.setFitness(getExpressionAverage(child));
+			}
+			// tournament of child and parent
+			ArrayList<Expression> pool = new ArrayList<>();
+			pool.add(child);
+			pool.add(population.get(i));
+			newPop.add(bestNeighbour(pool));
+		}
+
+		population.clear();
+		population.addAll(newPop);
+	}
+
+	public ArrayList<Expression> crossover(int crossPoint, 
+			Expression parentA, Expression parentB) {
+
+		String[] first = parentA.getExpression().clone();
+		String[] second = parentB.getExpression().clone();
+		String[] childOne = first.clone();
+		String[] childTwo = second.clone();
+		ArrayList<Expression> result = new ArrayList<>();
+
+		for (int i = crossPoint; i < parentA.getExpression().length; i++) {
+			childOne[i] = second[i];
+			childTwo[i] = first[i];
+		}
+
+		result.add(new Expression(childOne));
+		result.add(new Expression(childTwo));
+		result.get(0).setFitness(getExpressionAverage(result.get(0)));
+		result.get(1).setFitness(getExpressionAverage(result.get(1)));
+
+		System.out.println("\n\n" + parentA.toString() + "\n" + parentB.toString() + "\n" + result.get(0).toString() + "\n" + result.get(1).toString());
+		return result;
 	}
 
 	private ArrayList<Expression> tournament() {
 		System.out.println("---------- Tournament ------------");
 		ArrayList<Expression> parents = new ArrayList<>();
-		Random r = new Random();
 
 		int index = 0;
 		if (ELITISM) {
@@ -401,6 +347,9 @@ public class Engine2 {
 	}
 
 	private Double getExpressionResult(String[] expr) {
+		ScriptEngineManager sem = new ScriptEngineManager();
+		ScriptEngine scriptEngine = sem.getEngineByName("JavaScript");
+
 		ArrayList<String> expression = new ArrayList<String>();
 
 		for (int i = 0; i < expr.length; i++) {
@@ -436,7 +385,6 @@ public class Engine2 {
 		}
 
 		String line = "";
-		int count = 0;
 
 		while (scanner.hasNextLine()) {
 			//while (count < 3) {
@@ -450,18 +398,18 @@ public class Engine2 {
 				components[pos-1] = Double.parseDouble(tokens[pos]);	
 			}
 			data.add(components);
-			count++;
 		}
 		System.out.println(data.toString());
 	}
 
-	private Expression randomSearch(int seconds) {
+	private Expression randomSearch() {
 
 		Expression random = new Expression(12);
 		random.setFitness(getExpressionAverage(random));
 		Expression best = new Expression(random.getExpression().clone());
 		best.setFitness(getExpressionAverage(random));
-		long time = System.currentTimeMillis() + (seconds*1000);
+		long time = System.currentTimeMillis() + (SECONDS*1000);
+		int iterations = 0;
 
 		while(System.currentTimeMillis() < time) {
 			random.randomExpression(12);
@@ -473,6 +421,7 @@ public class Engine2 {
 				best.setFitness(getExpressionAverage(best));
 				System.out.println("*** New Best *** " + best.toString());
 			}
+			iterations++;
 		}
 		System.out.println("Best is " + best.toString());
 		return best;
