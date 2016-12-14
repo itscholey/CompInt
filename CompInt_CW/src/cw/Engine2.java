@@ -29,7 +29,6 @@ public class Engine2 {
 	private static final int 	 	CROSSOVER_POINT = 5;
 	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
 	private static final String  	TEST_FILE = "C:/Users/Chloe/Downloads/cwk_test.csv";
-	private static final int		SECONDS = 10;
 	private Random r;
 	private Scanner scanner;
 
@@ -44,9 +43,8 @@ public class Engine2 {
 	}
 
 	public void evolve(int method) {
-		System.out.println("------------- Initialise ------------");
+		System.out.println("------------- Initialising ------------");
 		initialise();
-		System.out.println("--------- Done Initialising ---------");
 		Collections.sort(population);
 		System.out.println("Best in generation: " + getBestExpression(population));
 
@@ -58,26 +56,29 @@ public class Engine2 {
 		for (int i = 0; i < GENERATIONS; i++) {
 			System.out.println("------------- Generation " + i + " -----------------");
 			Collections.sort(population);
-			for (int j = 0; j < population.size(); j++) {
-				System.out.println("Best " + j + ": " + population.get(j).toString());
-			}
 
 			switch(method) 
 			{
-			case 0: twoOptGeneration(tournament());
-			case 1: simpleStep();
+			case 0: twoOptGeneration(tournament()); break;
+			case 1: simpleStep(); break;
 			//case 2: crowdingStep();
-			case 3: localSearch();
-			case 4: randomSearch();
-			default: randomSearch();
+			case 3: localSearch(); break;
+			case 4: randomSearch(); break;
+			default: randomSearch(); break;
 			}
 			
 			Collections.sort(population);
 			for (int j = 0; j < 5; j++) {
 				System.out.println("Best " + j + ": " + population.get(j).toString());
 			}
-			
 		}
+		
+		String analysis = "\n ********** END OF ALGORITHM **********\n";
+		analysis += "Algorithm used was: " + EVOLUTIONARY_METHOD[method] + "\n";
+		analysis += "Population size: " + POPULATION_SIZE + "   Generations: " + GENERATIONS + "\n";
+		analysis += "Best solution was: " + population.get(0) + "\n";
+		
+		System.out.println(analysis);
 
 
 	}
@@ -143,11 +144,6 @@ public class Engine2 {
 		}
 		for (int i = index; i < POPULATION_SIZE; i++) {
 			population.add(newGenPool.get(r.nextInt(newGenPool.size())).clone());
-		}
-
-		Collections.sort(population);
-		for (int i = 0; i < population.size(); i++) {
-			System.out.println(population.get(i).toString());
 		}
 	}
 
@@ -246,22 +242,10 @@ public class Engine2 {
 
 	public void initialise() {
 		population = new ArrayList<>();
-		HashSet<Expression> pop = new HashSet<>();
 
 		for (int i = 0; i < POPULATION_SIZE; i++) {
-			boolean unique = false;
-			while (!unique) {
-				if (pop.add(new Expression(data.getDataLength()-1))) {
-					unique = true;
-				}
-			}
-		}
-
-		population.addAll(pop);
-
-		for (int i = 0; i < population.size(); i++) {
+			population.add(new Expression(data.getDataLength()-1));	
 			population.get(i).setFitness(getExpressionAverage(population.get(i)));
-			System.out.println(population.get(i).toString());
 		}
 
 	}
@@ -408,22 +392,16 @@ public class Engine2 {
 		random.setFitness(getExpressionAverage(random));
 		Expression best = new Expression(random.getExpression().clone());
 		best.setFitness(getExpressionAverage(random));
-		long time = System.currentTimeMillis() + (SECONDS*1000);
-		int iterations = 0;
 
-		while(System.currentTimeMillis() < time) {
-			random.randomExpression(12);
-			random.setFitness(getExpressionAverage(random));
-			System.out.println(random.toString());
+		random.randomExpression(12);
+		random.setFitness(getExpressionAverage(random));
+		System.out.println(random.toString());
 
-			if (Math.abs(random.getFitness()) < Math.abs(best.getFitness())) {
-				best.setExpression(random.getExpression().clone());
-				best.setFitness(getExpressionAverage(best));
-				System.out.println("*** New Best *** " + best.toString());
-			}
-			iterations++;
+		if (Math.abs(random.getFitness()) < Math.abs(best.getFitness())) {
+			best.setExpression(random.getExpression().clone());
+			best.setFitness(getExpressionAverage(best));
+			System.out.println("*** New Best *** " + best.toString());
 		}
-		System.out.println("Best is " + best.toString());
 		return best;
 	}
 }
