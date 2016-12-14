@@ -24,7 +24,7 @@ public class Engine2 {
 	private static final String[]	EVOLUTIONARY_METHOD = {"twoOptGeneration", "simpleStep", "crowdingStep", "localSearch", "randomSearch"};
 	private static final Boolean 	ELITISM = true;
 	private static final String  	SURVIVOR_SELECTION = "Generational";
-	private static final int 	 	POPULATION_SIZE = 100;
+	private static final int 	 	POPULATION_SIZE = 10;
 	private static final int 	 	GENERATIONS = 100;
 	private static final int 	 	CROSSOVER_POINT = 5;
 	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
