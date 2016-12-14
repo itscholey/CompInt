@@ -34,7 +34,7 @@ public class Engine2 {
 	private Scanner scanner;
 
 	public static void main(String[] args) {
-		new Engine2();
+		new Engine2(); 
 	}
 
 	public Engine2() {
