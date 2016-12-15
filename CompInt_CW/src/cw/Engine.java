@@ -13,23 +13,47 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+/**
+ * A Class to model evolutionary and genetic algorithms to tackle a Logistics
+ * problem with Computational Intelligence methods.
+ * 
+ * Please change the Variation Operators to get varied results.
+ * 
+ * 
+ * An example analysis of the algorithm is as follows (actual results):
+ * Algorithm used was: Local Search
+ * Population size: 10   Generations: 150
+ * Best solution was: Values: + - ^ + + - / % ^ + + / 35.194736842105264
+ * TRAIN AVERAGE = 35.194736842105264
+ * TEST AVERAGE  = 17.835526315789473
+
+ * 
+ * @author Chloe Barnes, 139006412
+ *
+ */
 public class Engine {
 
+	// The data set to train the algorithm on
 	private DataSet<Double> data;
 	private ArrayList<Double> actualValues;
-	private ArrayList<Expression> population;
+	// The data set to test the algorithm on
 	private DataSet<Double> testData;
 	private ArrayList<Double> testActual;
-
-	private static final Double  	RECOMBINATION_PROBABILITY = 1.00;
+	// The Expression population to evolve
+	private ArrayList<Expression> population;	
+	
+	/* Variation Operators */
+	private static final Double  	RECOMBINATION_PROBABILITY = 0.7;
 	private static final Double  	MUTATION_PROBABILITY = 0.7;
-	private static final int 		NUM_PARENTS = 4;						// MIN parents = 2
+	private static final int 		NUM_PARENTS = 4;
+	// Change the method used by passing an int to *evolve(i)* in Engine()
 	private static final String[]	EVOLUTIONARY_METHOD = {"Two Opt Generation", "Simple Step", "Local Search", "Random Search"};
 	private static final Boolean 	ELITISM = true;
-	private static final String  	SURVIVOR_SELECTION = "Generational";
 	private static final int 	 	POPULATION_SIZE = 10;
-	private static final int 	 	GENERATIONS = 100;
+	private static final int 	 	GENERATIONS = 150;
 	private static final int 	 	CROSSOVER_POINT = 3;
+	
+	// The files to read in the data from
 	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
 	private static final String  	TEST_FILE = "C:/Users/Chloe/Downloads/cwk_test.csv";
 	private Random r;
@@ -224,7 +248,7 @@ public class Engine {
 		}
 		
 		for (int i = children.size(); i < POPULATION_SIZE; i++) {
-			children.add(children.get(i%pars).clone().mutateByChange());
+			children.add(children.get(i%children.size()).clone().mutateByChange());
 			children.get(i).setFitness(getExpressionAverage(children.get(i), data, actualValues));
 		}
 
@@ -356,6 +380,13 @@ public class Engine {
 		return fitness;
 	}
 
+	/**
+	 * Build a String representation of an Expression based on a set of data.
+	 * 
+	 * @param ops The Expression operators to use.
+	 * @param data The data to use in the expression.
+	 * @return A String representation of the Expression combined with data.
+	 */
 	private String buildExpression(Expression ops, Double[] data) {
 
 		String expr = "";
@@ -363,7 +394,7 @@ public class Engine {
 		int op = 0;
 		int num = 0;
 
-		// create expression with operands and operators
+		// Create expression with operands and operators
 		for (int i = 0; i < (data.length*2)-1; i++) {
 			if (i%2 == 0) {
 				expr += String.valueOf(values[num]) + " ";
@@ -376,6 +407,13 @@ public class Engine {
 		return expr;
 	}
 
+	/**
+	 * Return the result a String representation of an arithmetic expression evaluates
+	 * to.
+	 * 
+	 * @param expr The String representation of an arithmetic expression to evaluate.
+	 * @return The Double value that the String evaluates to.
+	 */
 	private Double getExpressionResult(String expr) {
 		ScriptEngineManager sem = new ScriptEngineManager();
 		ScriptEngine scriptEngine = sem.getEngineByName("JavaScript");
@@ -389,6 +427,14 @@ public class Engine {
 		return Double.valueOf(result.toString());
 	}
 
+	/**
+	 * Read in and set up the data sets that the algorithms are based on.
+	 * 
+	 * @param file The file to read in.
+	 * @param d The data set to write to.
+	 * @param actual The set of actual data to compare to.
+	 * @return Object[] of both the populated data set and actual data set.
+	 */
 	private Object[] setupData(File file, DataSet<Double> d, ArrayList<Double> actual) {
 		d = new DataSet<>();
 		actual = new ArrayList<>();
@@ -404,7 +450,7 @@ public class Engine {
 
 		while (scanner.hasNextLine()) {
 			line = scanner.nextLine();
-			// set up line as double values
+			// Set up line as double values
 			String[] tokens = line.split(",");
 			Double[] components = new Double[tokens.length-1];
 			actual.add(Double.parseDouble(tokens[0]));
@@ -421,10 +467,14 @@ public class Engine {
 		return rtn;
 	}
 	
+	/**
+	 * Return a String representation of detail on the evolutionary algorithm.
+	 * 
+	 * @param evolutionMethod The index of the EVOLUTIONARY_METHOD array to use.
+	 * @return The String representation of analysis.
+	 */
 	private String getAnalysis(int evolutionMethod) {
-		String analysis = "Algorithm used was: " + EVOLUTIONARY_METHOD[evolutionMethod] + "\n";
-		analysis += "Population size: " + POPULATION_SIZE + "   Generations: " + GENERATIONS + "\n";
-		analysis += "Best solution was: " + population.get(0) + "\n";
+		String analysis = "";
 
 		for (int i = 0; i < data.size(); i++) {
 			String exp = buildExpression(population.get(0), data.getData(i));
@@ -439,7 +489,9 @@ public class Engine {
 			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
 			analysis += "      Actual:    " + testActual.get(i) + "\n";
 		}
-
+		analysis += "Algorithm used was: " + EVOLUTIONARY_METHOD[evolutionMethod] + "\n";
+		analysis += "Population size: " + POPULATION_SIZE + "   Generations: " + GENERATIONS + "\n";
+		analysis += "Best solution was: " + population.get(0) + "\n";
 		analysis += " TRAIN AVERAGE = " + getExpressionAverage(population.get(0), data, actualValues) + "\n";
 		analysis += " TEST AVERAGE  = " + getExpressionAverage(population.get(0), testData, testActual) + "\n";
 		return analysis;
