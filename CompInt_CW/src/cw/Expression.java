@@ -7,7 +7,7 @@ import java.util.Random;
 import java.lang.Math;
 
 public class Expression implements Comparable<Expression>, Cloneable {
-	private static final String[] OPERATORS = { "+", "-", "*"};
+	private static final String[] OPERATORS = { "+", "-", "*", "/", "%", "^"};
 	private String[] expression;
 	private Double fitness;
 	
@@ -44,35 +44,13 @@ public class Expression implements Comparable<Expression>, Cloneable {
 	public String getExpressionPart(int part) {
 		return expression[part];
 	}
-	
-	public int compareTo(Expression otherExpr) {
-		Double ftns = Math.abs(fitness);
-		Double otrftns = Math.abs(otherExpr.getFitness());
-		return ftns.compareTo(otrftns);
-    }
-	
-	public static Comparator<Expression> ExpressionComparator
-    = new Comparator<Expression>() {
-
-		public int compare(Expression expr1, Expression expr2) {
-
-			Double exprFit1 = Math.abs(expr1.getFitness());
-			Double exprFit2 = Math.abs(expr2.getFitness());
-
-			//ascending
-			return exprFit1.compareTo(exprFit2);
-
-			//descending
-			//return exprFit2.compareTo(exprFit1);
-		}
-	
-	};
 	  
 	public Expression mutateByChange() {
 		Random r = new Random();
 		String[] swapped = getExpression();
+		int toMutate = r.nextInt(expression.length);
 		
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < toMutate; i++) {
 			int toSwap = r.nextInt(expression.length);
 			swapped[toSwap] = OPERATORS[r.nextInt(OPERATORS.length)];
 		}
@@ -141,6 +119,12 @@ public class Expression implements Comparable<Expression>, Cloneable {
 		return s;
 	}
 	
+	public int compareTo(Expression otherExpr) {
+		Double ftns = Math.abs(fitness);
+		Double otrftns = Math.abs(otherExpr.getFitness());
+		return ftns.compareTo(otrftns);
+    }
+
 	public Expression clone() {
 		final Expression clone;
 		try {
