@@ -24,7 +24,7 @@ public class Engine {
 	private static final Double  	RECOMBINATION_PROBABILITY = 1.00;
 	private static final Double  	MUTATION_PROBABILITY = 0.7;
 	private static final int 		NUM_PARENTS = 4;						// MIN parents = 2
-	private static final String[]	EVOLUTIONARY_METHOD = {"twoOptGeneration", "simpleStep", "localSearch", "randomSearch"};
+	private static final String[]	EVOLUTIONARY_METHOD = {"Two Opt Generation", "Simple Step", "Local Search", "Random Search"};
 	private static final Boolean 	ELITISM = true;
 	private static final String  	SURVIVOR_SELECTION = "Generational";
 	private static final int 	 	POPULATION_SIZE = 10;
@@ -35,31 +35,53 @@ public class Engine {
 	private Random r;
 	private Scanner scanner;
 
+	/**
+	 * Run the main loop for the Engine class.
+	 * 
+	 * @param args Array of arguments to pass into the main loop.
+	 */
 	public static void main(String[] args) {
 		new Engine(); 
 	}
 
+	/**
+	 * Construct and initialise a new Engine instance.
+	 * Set up the data sets and start the evolutionary algorithm.
+	 */
 	public Engine() {
+		// Set up the train data
 		Object[] train = setupData(new File(TRAIN_FILE), data, actualValues);
 		data = (DataSet<Double>) train[0]; 
 		actualValues = (ArrayList<Double>) train[1];
+		
+		// Set up the test data
 		Object[] test = setupData(new File(TEST_FILE), testData, testActual);
 		testData = (DataSet<Double>) test[0];
 		testActual = (ArrayList<Double>) test[1];
+		
+		// Instantiate variables
 		r = new Random();
-		evolve(2); // IN evolutionary_method
+		
+		// Start the evolutionary algorithm
+		evolve(2);
 	}
 
+	/**
+	 * Run an evolutionary algorithm for the given number of generations, and for
+	 * the specified evolutionary algorithm method.
+	 * 
+	 * @param method The algorithm to use.
+	 * @see EVOLUTIONARY_METHOD
+	 */
 	public void evolve(int method) {
 		System.out.println("------------- Initialising ------------");
 		initialise();
-		Collections.sort(population);
-		System.out.println("Best in generation: " + getBestExpression(population));
 
+		// The Generation Loop
 		for (int i = 0; i < GENERATIONS; i++) {
 			System.out.println("------------- Generation " + i + " -----------------");
-			Collections.sort(population);
-
+			
+			// Choose which evolutionary step to use
 			switch(method) 
 			{
 			case 0: twoOptGeneration(tournament()); break;
@@ -69,95 +91,36 @@ public class Engine {
 			default: randomSearch(); break;
 			}
 
+			// Print the best five results
 			Collections.sort(population);
 			for (int j = 0; j < 5; j++) {
 				System.out.println("Best " + j + ": " + population.get(j).toString());
 			}
 		}
-
-		String analysis = "\n ********** END OF ALGORITHM **********\n";
-		analysis += "Algorithm used was: " + EVOLUTIONARY_METHOD[method] + "\n";
-		analysis += "Population size: " + POPULATION_SIZE + "   Generations: " + GENERATIONS + "\n";
-		analysis += "Best solution was: " + population.get(0) + "\n";
-
-		for (int i = 0; i < data.size(); i++) {
-			String exp = buildExpression(population.get(0), data.getData(i));
-			analysis += "Row " + i + " is: " + exp + "\n";
-			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
-			analysis += "      Actual:    " + actualValues.get(i) + "\n";
-		}
-
-		for (int i = 0; i < testData.size(); i++) {
-			String exp = buildExpression(population.get(0), testData.getData(i));
-			analysis += "Test Row: " + i + " is: " + exp + "\n";
-			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
-			analysis += "      Actual:    " + testActual.get(i) + "\n";
-		}
-
-		analysis += " TRAIN AVERAGE = " + getExpressionAverage(population.get(0), data, actualValues) + "\n";
-		analysis += " TEST AVERAGE  = " + getExpressionAverage(population.get(0), testData, testActual) + "\n";
-
-		System.out.println(analysis);
-
-
+		
+		System.out.println("\n ********** END OF ALGORITHM **********\n");
+		System.out.println(getAnalysis(method));
 	}
 
-	public void crowdingStep() {
-		ArrayList<Expression> parentPool = new ArrayList<>();
-		ArrayList<Expression> children = new ArrayList<>();
-		Collections.shuffle(population);
-		int parents = NUM_PARENTS;
-		if (parents%2 != 0) { 
-			parents++;
-		}
-
-		/* ****** PHASE 1 ****** */
-		for (int i = 0; i < parents; i++) {
-			parentPool.add(population.get(i).clone());			
-		}
-
-		/* ****** PHASE 2 ****** */
-
-		for (int i = 0; i < parentPool.size(); i+=2) {
-			// Crossover
-			if (r.nextDouble() < RECOMBINATION_PROBABILITY) {
-				// one-point crossover
-				children.addAll(crossover(CROSSOVER_POINT, parentPool.get(i), parentPool.get(i+1)));
-			}
-			// Mutation
-			else {
-				children.add(parentPool.get(i).clone());
-				children.add(parentPool.get(i+1).clone());
-				if (r.nextDouble() < MUTATION_PROBABILITY)	children.get(i).mutateByChange();
-				if (r.nextDouble() < MUTATION_PROBABILITY)	children.get(i+1).mutateByChange();
-			}
-		}
-
-		/* ****** PHASE 3 ****** */
-		for (int parent = 0; parent < parentPool.size(); parent++) {
-			for (int child = 0; child < children.size(); child++) {
-
-			}
-		}
-
-		/* ****** PHASE 4 ****** */
-
-		/* ****** PHASE 5 ****** */
-
-	}
-
-
+	/**
+	 * Simple Step evolutionary algorithm step; incorporates mutation with a probability
+	 * as well as novel parent selection: a child is generated from a parent and mutated 
+	 * with a probability - the parent and child then enter a tournament to select which
+	 * of the two will go into the next generation (Deterministic Replacement/Crowding).
+	 */
 	public void simpleStep() {
 		ArrayList<Expression> newPop = new ArrayList<>();
 		for (int i = 0; i < population.size(); i++) {
-			// child = oldPop[i]
+			// Create a clone of the parent
 			Expression child = population.get(i).clone();
-			// mutate with prob of mutation
+			
+			// Mutate child with a probability of mutation
 			if (r.nextDouble() <= MUTATION_PROBABILITY) {
 				child.mutateByChange();
 				child.setFitness(getExpressionAverage(child, data, actualValues));
 			}
-			// tournament of child and parent
+			
+			// Tournament of child and parent to decide survivor
 			ArrayList<Expression> pool = new ArrayList<>();
 			pool.add(child);
 			pool.add(population.get(i));
@@ -168,15 +131,26 @@ public class Engine {
 		population.addAll(newPop);
 	}
 
+	/**
+	 * Perform one-point crossover, beginning at the crossover point crossPoint
+	 * for parents parentA and parentB.
+	 * 
+	 * @param crossPoint The point in which to cross the two parents over.
+	 * @param parentA The first parent Expression.
+	 * @param parentB The second parent Expression.
+	 * @return ArrayList<Expression> containing the combined children.
+	 */
 	public ArrayList<Expression> crossover(int crossPoint, 
 			Expression parentA, Expression parentB) {
 
+		// Set up the crossover elements
 		String[] first = parentA.getExpression().clone();
 		String[] second = parentB.getExpression().clone();
 		String[] childOne = first.clone();
 		String[] childTwo = second.clone();
 		ArrayList<Expression> result = new ArrayList<>();
 
+		// After the crossPoint, swap elements from parentsA and B
 		for (int i = crossPoint; i < parentA.getExpression().length; i++) {
 			childOne[i] = second[i];
 			childTwo[i] = first[i];
@@ -190,9 +164,15 @@ public class Engine {
 		return result;
 	}
 
+	/**
+	 * Tournament the population for the number of parents NUM_PARENTS.
+	 * 
+	 * @return ArrayList<Expression> containing the winning parents.
+	 */
 	private ArrayList<Expression> tournament() {
 		ArrayList<Expression> parents = new ArrayList<>();
 
+		// Increment index if Elitist
 		int index = 0;
 		if (ELITISM) {
 			parents.add(bestNeighbour(population).clone());
@@ -204,23 +184,33 @@ public class Engine {
 		return parents;
 	}
 
+	/**
+	 * Local Search genetic algorithm step; incorporates mutation and crossover with a
+	 * probability. A Generational approach (all elements last exactly one generation).
+	 * When <ELITISM> is true, the best solution from the previous generation persists. 
+	 */
 	private void localSearch() {
 		Collections.sort(population);
 
 		ArrayList<Expression> parents = (ArrayList<Expression>) tournament().clone();
 		ArrayList<Expression> children = new ArrayList<>();
 
+		// Parents should an even number
 		int pars = NUM_PARENTS;
 		if (pars%2 != 0) { 
 			pars--;
+		} else if (pars < 2) {
+			pars = 2;
 		}
 			
+		// Recombination with one-point crossover
 		for (int i = 0; i < pars-1; i += 2) {
 			if (r.nextDouble() < RECOMBINATION_PROBABILITY) {
 				children.addAll(crossover(CROSSOVER_POINT, parents.get(i), parents.get(i+1)));
 			}
 		}
 
+		// Random mutation
 		for (int i = 0; i < children.size(); i++) {
 			if (r.nextDouble() < MUTATION_PROBABILITY) {
 				children.set(i, children.get(i).mutateByChange().clone());
@@ -228,6 +218,7 @@ public class Engine {
 			children.get(i).setFitness(getExpressionAverage(children.get(i), data, actualValues));
 		}
 		
+		// Add the best element to the next generation if elitism is chosen
 		if (ELITISM) {
 			children.add(population.get(0).clone());
 		}
@@ -240,6 +231,9 @@ public class Engine {
 		population = (ArrayList<Expression>) children.clone();
 	}
 
+	/**
+	 * Random Search algorithm step; generates random solutions and keeps the best one.
+	 */
 	private void randomSearch() {
 
 		Collections.sort(population);
@@ -256,9 +250,18 @@ public class Engine {
 		population.addAll(newPop);
 	}
 	
+	/**
+	 * Two Opt Generation algorithm step; generates a two-opt neighbourhood for each of
+	 * the parents chosen, and chooses the best set of generated children to go forward
+	 * as the next generation.
+	 * 
+	 * @param parents The set of parents that a two opt neighbourhood will be generated
+	 * 		 		  from, and subsequently the new generation will be taken from.
+	 */
 	public void twoOptGeneration(ArrayList<Expression> parents) {
 		ArrayList<Expression> pool = new ArrayList<>();
 
+		// For each parent, add the two opt neighbourhood to the pool to choose from
 		for (int i = 0; i < parents.size(); i++) {
 			pool.addAll(twoOptNeighbourhood(parents.get(i)));
 		}
@@ -269,11 +272,16 @@ public class Engine {
 			population.add(pool.get(index).clone());
 			index++;
 		}
+		
+		// Get the best solutions from the neighbourhood pool
 		for (int i = index; i < POPULATION_SIZE; i++) {
 			population.add(pool.get(r.nextInt(pool.size())).clone());
 		}
 	}
 
+	/**
+	 * Initialise the population with random solutions.
+	 */
 	public void initialise() {
 		population = new ArrayList<>();
 
@@ -281,18 +289,34 @@ public class Engine {
 			population.add(new Expression(data.getDataLength()-1));	
 			population.get(i).setFitness(getExpressionAverage(population.get(i), data, actualValues));
 		}
-
 	}
 
+	/**
+	 * Return the best neighbour in the neighbourhood.
+	 * 
+	 * @param nbhd The Expressions to find the best in.
+	 * @return The best Expression.
+	 */
 	private Expression bestNeighbour(ArrayList<Expression> nbhd) {
 		Collections.sort(nbhd);
 		return nbhd.get(0);
 	}
 
-
+	/**
+	 * A helper method to return the two opt neighbourhood for a given Expression. This
+	 * is every element in the Expression swapped, i.e. for [^+-/], the output would be
+	 * as follows:
+	 * 
+	 * <[+^-/], [-+^/], [/+-^], [^-+/], [^/-+], [^+/-]>
+	 * 
+	 * @param expr The Expression to find the two opt neighbourhood for.
+	 * @return The two opt neighbourhood.
+	 */
 	private ArrayList<Expression> twoOptNeighbourhood(final Expression expr) {
 		ArrayList<Expression> result = new ArrayList<>();
+		// A temporary array to store the expression being built
 		String[] tmpExpr = new String[expr.getExpression().length];
+		// A temporary variable to store during swap
 		String tmpPart = "";
 
 		// 1, 2, 3, ...
@@ -311,11 +335,15 @@ public class Engine {
 		return result;
 	}
 
-	private String getBestExpression(ArrayList<Expression> area) {
-		Collections.sort(area);
-		return area.get(0).toString();
-	}
-
+	/**
+	 * Return the average evaluated solution for the Expression, based on actual values
+	 * passed in and a data set.
+	 * 
+	 * @param expr The Expression to evaluate and return an answer for.
+	 * @param d The data set to apply the Expression to.
+	 * @param actual The actual values to compare the average with.
+	 * @return The Double value of the average of the Expression.
+	 */
 	private Double getExpressionAverage(Expression expr, DataSet<Double> d, ArrayList<Double> actual)
 	{
 		Double fitness = 0.0;
@@ -325,7 +353,6 @@ public class Engine {
 			fitness += Math.abs(getExpressionResult(expressions[j]) - actual.get(j));
 		}
 		fitness = (fitness / data.size());
-
 		return fitness;
 	}
 
@@ -392,5 +419,29 @@ public class Engine {
 		rtn[0] = d;
 		rtn[1] = actual;
 		return rtn;
+	}
+	
+	private String getAnalysis(int evolutionMethod) {
+		String analysis = "Algorithm used was: " + EVOLUTIONARY_METHOD[evolutionMethod] + "\n";
+		analysis += "Population size: " + POPULATION_SIZE + "   Generations: " + GENERATIONS + "\n";
+		analysis += "Best solution was: " + population.get(0) + "\n";
+
+		for (int i = 0; i < data.size(); i++) {
+			String exp = buildExpression(population.get(0), data.getData(i));
+			analysis += "Row " + i + " is: " + exp + "\n";
+			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
+			analysis += "      Actual:    " + actualValues.get(i) + "\n";
+		}
+
+		for (int i = 0; i < testData.size(); i++) {
+			String exp = buildExpression(population.get(0), testData.getData(i));
+			analysis += "Test Row: " + i + " is: " + exp + "\n";
+			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
+			analysis += "      Actual:    " + testActual.get(i) + "\n";
+		}
+
+		analysis += " TRAIN AVERAGE = " + getExpressionAverage(population.get(0), data, actualValues) + "\n";
+		analysis += " TEST AVERAGE  = " + getExpressionAverage(population.get(0), testData, testActual) + "\n";
+		return analysis;
 	}
 }
