@@ -23,12 +23,12 @@ public class Engine2 {
 
 	private static final Double  	RECOMBINATION_PROBABILITY = 1.00;
 	private static final Double  	MUTATION_PROBABILITY = 0.7;
-	private static final int 		NUM_PARENTS = 2;						// MIN parents = 2
-	private static final String[]	EVOLUTIONARY_METHOD = {"twoOptGeneration", "simpleStep", "crowdingStep", "localSearch", "randomSearch"};
+	private static final int 		NUM_PARENTS = 4;						// MIN parents = 2
+	private static final String[]	EVOLUTIONARY_METHOD = {"twoOptGeneration", "simpleStep", "localSearch", "randomSearch"};
 	private static final Boolean 	ELITISM = true;
 	private static final String  	SURVIVOR_SELECTION = "Generational";
-	private static final int 	 	POPULATION_SIZE = 20;
-	private static final int 	 	GENERATIONS = 30;
+	private static final int 	 	POPULATION_SIZE = 10;
+	private static final int 	 	GENERATIONS = 100;
 	private static final int 	 	CROSSOVER_POINT = 3;
 	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
 	private static final String  	TEST_FILE = "C:/Users/Chloe/Downloads/cwk_test.csv";
@@ -47,31 +47,7 @@ public class Engine2 {
 		testData = (DataSet<Double>) test[0];
 		testActual = (ArrayList<Double>) test[1];
 		r = new Random();
-		evolve(3); // IN evolutionary_method
-		/*		initialise();
-		String[] sA = {"+", "-", "*", "*", "*", "*", "*", "*", "*", "-", "-", "-"};
-		Expression e = new Expression(sA);
-
-
-		String analysis = "\n ********** END OF ALGORITHM **********\n";
-		for (int i = 0; i < data.size(); i++) {
-			String exp = buildExpression(e, data.getData(i));
-			analysis += "Row " + i + " is: " + exp + "\n";
-			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
-			analysis += "      Actual:    " + actualValues.get(i) + "\n";
-		}
-
-		for (int i = 0; i < testData.size(); i++) {
-			String exp = buildExpression(e, testData.getData(i));
-			analysis += "Test Row: " + i + " is: " + exp + "\n";
-			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
-			analysis += "      Actual:    " + testActual.get(i) + "\n";
-		}
-
-		analysis += " TRAIN AVERAGE = " + getExpressionAverage(e) + "\n";
-		analysis += " TEST AVERAGE  = " + getTestExpressionAverage(e) + "\n";
-
-		System.out.println(analysis);*/
+		evolve(2); // IN evolutionary_method
 	}
 
 	public void evolve(int method) {
@@ -79,11 +55,6 @@ public class Engine2 {
 		initialise();
 		Collections.sort(population);
 		System.out.println("Best in generation: " + getBestExpression(population));
-
-
-		// evaluate each candidate
-
-		// repeat until ( termination condition is satisfied ) do
 
 		for (int i = 0; i < GENERATIONS; i++) {
 			System.out.println("------------- Generation " + i + " -----------------");
@@ -93,9 +64,8 @@ public class Engine2 {
 			{
 			case 0: twoOptGeneration(tournament()); break;
 			case 1: simpleStep(); break;
-			//case 2: crowdingStep();
-			case 3: localSearch(); break;
-			case 4: randomSearch(); break;
+			case 2: localSearch(); break;
+			case 3: randomSearch(); break;
 			default: randomSearch(); break;
 			}
 
@@ -124,8 +94,8 @@ public class Engine2 {
 			analysis += "      Actual:    " + testActual.get(i) + "\n";
 		}
 
-		analysis += " TRAIN AVERAGE = " + getExpressionAverage(population.get(0)) + "\n";
-		analysis += " TEST AVERAGE  = " + getTestExpressionAverage(population.get(0)) + "\n";
+		analysis += " TRAIN AVERAGE = " + getExpressionAverage(population.get(0), data, actualValues) + "\n";
+		analysis += " TEST AVERAGE  = " + getExpressionAverage(population.get(0), testData, testActual) + "\n";
 
 		System.out.println(analysis);
 
@@ -185,7 +155,7 @@ public class Engine2 {
 			// mutate with prob of mutation
 			if (r.nextDouble() <= MUTATION_PROBABILITY) {
 				child.mutateByChange();
-				child.setFitness(getExpressionAverage(child));
+				child.setFitness(getExpressionAverage(child, data, actualValues));
 			}
 			// tournament of child and parent
 			ArrayList<Expression> pool = new ArrayList<>();
@@ -214,8 +184,8 @@ public class Engine2 {
 
 		result.add(new Expression(childOne));
 		result.add(new Expression(childTwo));
-		result.get(0).setFitness(getExpressionAverage(result.get(0)));
-		result.get(1).setFitness(getExpressionAverage(result.get(1)));
+		result.get(0).setFitness(getExpressionAverage(result.get(0), data, actualValues));
+		result.get(1).setFitness(getExpressionAverage(result.get(1), data, actualValues));
 
 		return result;
 	}
@@ -237,7 +207,7 @@ public class Engine2 {
 	private void localSearch() {
 		Collections.sort(population);
 
-		ArrayList<Expression> parents = tournament();
+		ArrayList<Expression> parents = (ArrayList<Expression>) tournament().clone();
 		ArrayList<Expression> children = new ArrayList<>();
 
 		int pars = NUM_PARENTS;
@@ -255,6 +225,7 @@ public class Engine2 {
 			if (r.nextDouble() < MUTATION_PROBABILITY) {
 				children.set(i, children.get(i).mutateByChange().clone());
 			}
+			children.get(i).setFitness(getExpressionAverage(children.get(i), data, actualValues));
 		}
 		
 		if (ELITISM) {
@@ -263,11 +234,28 @@ public class Engine2 {
 		
 		for (int i = children.size(); i < POPULATION_SIZE; i++) {
 			children.add(children.get(i%pars).clone().mutateByChange());
+			children.get(i).setFitness(getExpressionAverage(children.get(i), data, actualValues));
 		}
 
 		population = (ArrayList<Expression>) children.clone();
 	}
 
+	private void randomSearch() {
+
+		Collections.sort(population);
+		
+		ArrayList<Expression> newPop = new ArrayList<>();
+		newPop.add(population.get(0).clone());
+		
+		for (int i = 1; i < POPULATION_SIZE; i++) {
+			newPop.add(new Expression(population.get(0).size()));
+			newPop.get(i).setFitness(getExpressionAverage(newPop.get(i), data, actualValues));
+		}
+		
+		population.clear();
+		population.addAll(newPop);
+	}
+	
 	public void twoOptGeneration(ArrayList<Expression> parents) {
 		ArrayList<Expression> pool = new ArrayList<>();
 
@@ -291,7 +279,7 @@ public class Engine2 {
 
 		for (int i = 0; i < POPULATION_SIZE; i++) {
 			population.add(new Expression(data.getDataLength()-1));	
-			population.get(i).setFitness(getExpressionAverage(population.get(i)));
+			population.get(i).setFitness(getExpressionAverage(population.get(i), data, actualValues));
 		}
 
 	}
@@ -309,7 +297,6 @@ public class Engine2 {
 
 		// 1, 2, 3, ...
 		for (int i = 0; i < expr.getExpression().length; i++) {
-			//System.out.println(i);
 			// 1-2, 1-3, 1-4, ...
 			for (int gap = 1; gap+i < expr.getExpression().length; gap++) {
 				tmpExpr = expr.getExpression().clone();
@@ -317,15 +304,10 @@ public class Engine2 {
 				tmpExpr[i] = expr.getExpression()[i+gap];
 				tmpExpr[i+gap] = tmpPart;
 				Expression e = new Expression(tmpExpr);
-				e.setFitness(getExpressionAverage(e));
-				//System.out.println(e.toString());
+				e.setFitness(getExpressionAverage(e, data, actualValues));
 				result.add(e);
 			}
 		}
-
-		/*for (Expression e : result) {
-			System.out.println(e.toString());
-		}	*/	
 		return result;
 	}
 
@@ -334,37 +316,16 @@ public class Engine2 {
 		return area.get(0).toString();
 	}
 
-	private Double getExpressionAverage(Expression expr)
+	private Double getExpressionAverage(Expression expr, DataSet<Double> d, ArrayList<Double> actual)
 	{
 		Double fitness = 0.0;
-		String fitnesses = "";
-		String[] expressions = new String[data.size()]; 
-		for (int j = 0; j < data.size(); j++) {
-			expressions[j] = buildExpression(expr, data.getData(j));
-			fitness += Math.abs(getExpressionResult(expressions[j]) - actualValues.get(j));
-			fitnesses += "Estimate: " + getExpressionResult(expressions[j]) + " Actual: " + actualValues.get(j) + " Difference: " +
-					(getExpressionResult(expressions[j]) - actualValues.get(j) + "\n");
+		String[] expressions = new String[d.size()]; 
+		for (int j = 0; j < d.size(); j++) {
+			expressions[j] = buildExpression(expr, d.getData(j));
+			fitness += Math.abs(getExpressionResult(expressions[j]) - actual.get(j));
 		}
 		fitness = (fitness / data.size());
 
-		//System.out.println("Fitness is " + fitness + "\n" + fitnesses);
-		return fitness;
-	}
-
-	private Double getTestExpressionAverage(Expression expr)
-	{
-		Double fitness = 0.0;
-		String fitnesses = "";
-		String[] expressions = new String[testData.size()]; 
-		for (int j = 0; j < testData.size(); j++) {
-			expressions[j] = buildExpression(expr, testData.getData(j));
-			fitness += Math.abs(getExpressionResult(expressions[j]) - testActual.get(j));
-			fitnesses += "Estimate: " + getExpressionResult(expressions[j]) + " Actual: " + testActual.get(j) + " Difference: " +
-					(getExpressionResult(expressions[j]) - testActual.get(j) + "\n");
-		}
-		fitness = (fitness / testData.size());
-
-		//System.out.println("Fitness is " + fitness + "\n" + fitnesses);
 		return fitness;
 	}
 
@@ -431,24 +392,5 @@ public class Engine2 {
 		rtn[0] = d;
 		rtn[1] = actual;
 		return rtn;
-	}
-
-	private Expression randomSearch() {
-
-		Expression random = new Expression(12);
-		random.setFitness(getExpressionAverage(random));
-		Expression best = new Expression(random.getExpression().clone());
-		best.setFitness(getExpressionAverage(random));
-
-		random.randomExpression(12);
-		random.setFitness(getExpressionAverage(random));
-		System.out.println(random.toString());
-
-		if (Math.abs(random.getFitness()) < Math.abs(best.getFitness())) {
-			best.setExpression(random.getExpression().clone());
-			best.setFitness(getExpressionAverage(best));
-			System.out.println("*** New Best *** " + best.toString());
-		}
-		return best;
 	}
 }
