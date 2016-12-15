@@ -6,45 +6,102 @@ import java.util.Objects;
 import java.util.Random;
 import java.lang.Math;
 
+/**
+ * A Class to model an Expression, which is a String[] of operators.
+ * 
+ * @author Chloe Barnes, 139006412
+ *
+ */
 public class Expression implements Comparable<Expression>, Cloneable {
 	private static final String[] OPERATORS = { "+", "-", "*", "/", "%", "^"};
 	private String[] expression;
 	private Double fitness;
 	
+	/**
+	 * Construct a new Expression object, with a provided String[] of operators.
+	 * 
+	 * @param expr String[] of the operators.
+	 */
 	public Expression(String[] expr) {
 		this.expression = expr;
 	}
 	
+	/**
+	 * Construct a new Expression object, with a random String[] of operators on
+	 * a given length.
+	 * 
+	 * @param length How long the Expression is.
+	 */
 	public Expression(int length) {
 		randomExpression(length);
 	}
 	
+	/**
+	 * Construct an empty Expression.
+	 */
 	public Expression() {
 	}
 	
+	/**
+	 * Set the value of the expression field.
+	 * 
+	 * @param expr The expression to set as.
+	 */
 	public void setExpression(String[] expr) {
 		this.expression = expr;
 	}
+	
+	/**
+	 * Get the expression representation.
+	 * 
+	 * @return The String[] representation.
+	 */
 	public String[] getExpression() {
 		return expression;
 	}
 	
+	/**
+	 * Return the size of the expression.
+	 * 
+	 * @return The size of the expression.
+	 */
 	public int size() {
 		return expression.length;
 	}
 	
+	/**
+	 * Set the fitness of the expression.
+	 * 
+	 * @param f The fitness to set as.
+	 */
 	public void setFitness(Double f) {
 		this.fitness = f;
 	}
 	
+	/**
+	 * Return the fitness of the expression.
+	 * 
+	 * @return The Double value of the expression.
+	 */
 	public Double getFitness() {
 		return fitness;
 	}
 	
+	/**
+	 * Return a single element of the expression.
+	 * 
+	 * @param part The index to get.
+	 * @return The String at the index.
+	 */
 	public String getExpressionPart(int part) {
 		return expression[part];
 	}
 	  
+	/**
+	 * Mutate the expression by a random amount.
+	 * 
+	 * @return This Expression object.
+	 */
 	public Expression mutateByChange() {
 		Random r = new Random();
 		String[] swapped = getExpression();
@@ -60,6 +117,11 @@ public class Expression implements Comparable<Expression>, Cloneable {
 		return this;
 	}
 	
+	/**
+	 * Return a random operator from the valid operators list.
+	 * 
+	 * @return A random operator.
+	 */
 	public static String getRandomOperator() {
 		Random r = new Random();
 		String result = OPERATORS[r.nextInt(OPERATORS.length)];
@@ -78,7 +140,6 @@ public class Expression implements Comparable<Expression>, Cloneable {
 			expression[i] = Expression.getRandomOperator();
 		}
 	}
-	
 	
 	@Override
 	public int hashCode() {
@@ -108,6 +169,7 @@ public class Expression implements Comparable<Expression>, Cloneable {
 		return true;
 	}
 
+	@Override
 	public String toString() {
 		String s = "Values: ";
 		
@@ -119,12 +181,14 @@ public class Expression implements Comparable<Expression>, Cloneable {
 		return s;
 	}
 	
+	@Override
 	public int compareTo(Expression otherExpr) {
 		Double ftns = Math.abs(fitness);
 		Double otrftns = Math.abs(otherExpr.getFitness());
 		return ftns.compareTo(otrftns);
     }
 
+	@Override
 	public Expression clone() {
 		final Expression clone;
 		try {
