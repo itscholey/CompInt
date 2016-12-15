@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
@@ -26,8 +27,8 @@ public class Engine2 {
 	private static final String[]	EVOLUTIONARY_METHOD = {"twoOptGeneration", "simpleStep", "crowdingStep", "localSearch", "randomSearch"};
 	private static final Boolean 	ELITISM = true;
 	private static final String  	SURVIVOR_SELECTION = "Generational";
-	private static final int 	 	POPULATION_SIZE = 5;
-	private static final int 	 	GENERATIONS = 100;
+	private static final int 	 	POPULATION_SIZE = 6;
+	private static final int 	 	GENERATIONS = 150;
 	private static final int 	 	CROSSOVER_POINT = 5;
 	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
 	private static final String  	TEST_FILE = "C:/Users/Chloe/Downloads/cwk_test.csv";
@@ -47,6 +48,30 @@ public class Engine2 {
 		testActual = (ArrayList<Double>) test[1];
 		r = new Random();
 		evolve(1); // IN evolutionary_method
+/*		initialise();
+		String[] sA = {"-", "+", "+", "*", "+", "+", "-", "-", "*", "*", "-", "*"};
+		Expression e = new Expression(sA);
+		
+		
+		String analysis = "\n ********** END OF ALGORITHM **********\n";
+		for (int i = 0; i < data.size(); i++) {
+			String exp = buildExpression(e, data.getData(i));
+			analysis += "Row " + i + " is: " + exp + "\n";
+			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
+			analysis += "      Actual:    " + actualValues.get(i) + "\n";
+		}
+		
+		for (int i = 0; i < testData.size(); i++) {
+			String exp = buildExpression(e, testData.getData(i));
+			analysis += "Test Row: " + i + " is: " + exp + "\n";
+			analysis += "      Estimated: " + getExpressionResult(exp) + "\n";
+			analysis += "      Actual:    " + testActual.get(i) + "\n";
+		}
+		
+		analysis += " TRAIN AVERAGE = " + getExpressionAverage(e) + "\n";
+		analysis += " TEST AVERAGE  = " + getTestExpressionAverage(e) + "\n";
+		
+		System.out.println(analysis);*/
 	}
 
 	public void evolve(int method) {
@@ -312,7 +337,7 @@ public class Engine2 {
 		String[] expressions = new String[data.size()]; 
 		for (int j = 0; j < data.size(); j++) {
 			expressions[j] = buildExpression(expr, data.getData(j));
-			fitness += (getExpressionResult(expressions[j]) - actualValues.get(j));
+			fitness += Math.abs(getExpressionResult(expressions[j]) - actualValues.get(j));
 			fitnesses += "Estimate: " + getExpressionResult(expressions[j]) + " Actual: " + actualValues.get(j) + " Difference: " +
 					(getExpressionResult(expressions[j]) - actualValues.get(j) + "\n");
 		}
@@ -329,7 +354,7 @@ public class Engine2 {
 		String[] expressions = new String[testData.size()]; 
 		for (int j = 0; j < testData.size(); j++) {
 			expressions[j] = buildExpression(expr, testData.getData(j));
-			fitness += (getExpressionResult(expressions[j]) - testActual.get(j));
+			fitness += Math.abs(getExpressionResult(expressions[j]) - testActual.get(j));
 			fitnesses += "Estimate: " + getExpressionResult(expressions[j]) + " Actual: " + testActual.get(j) + " Difference: " +
 					(getExpressionResult(expressions[j]) - testActual.get(j) + "\n");
 		}
