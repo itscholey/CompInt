@@ -7,7 +7,7 @@ import java.util.Random;
 import java.lang.Math;
 
 public class Expression implements Comparable<Expression>, Cloneable {
-	private static final String[] OPERATORS = { "+", "-", "*" };
+	private static final String[] OPERATORS = { "+", "-", "*"};
 	private String[] expression;
 	private Double fitness;
 	
