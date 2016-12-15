@@ -10,7 +10,8 @@ import java.lang.Math;
  * A Class to model an Expression, which is a String[] of operators.
  * 
  * @author Chloe Barnes, 139006412
- *
+ * @version CS3910 Computational Intelligence Logistics Coursework
+ * @version 15th December 2016
  */
 public class Expression implements Comparable<Expression>, Cloneable {
 	private static final String[] OPERATORS = { "+", "-", "*", "/", "%", "^"};

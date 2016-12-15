@@ -3,10 +3,12 @@ package cw;
 import java.util.ArrayList;
 
 /**
- * A Class to model a set of data that the program is based on.
+ * An Abstract Data Type to model a set of data that the program is based on.
  * 
  * @author Chloe Barnes, 139006412
- *
+ * @version CS3910 Computational Intelligence Logistics Coursework
+ * @version 15th December 2016
+ * 
  * @param <T> The type the Data Set contains.
  */
 public class DataSet<T> {

@@ -29,7 +29,8 @@ import javax.script.ScriptException;
 
  * 
  * @author Chloe Barnes, 139006412
- *
+ * @version CS3910 Computational Intelligence Logistics Coursework
+ * @version 15th December 2016
  */
 public class Engine {
 
@@ -127,6 +128,35 @@ public class Engine {
 	}
 
 	/**
+	 * Two Opt Generation algorithm step; generates a two-opt neighbourhood for each of
+	 * the parents chosen, and chooses the best set of generated children to go forward
+	 * as the next generation.
+	 * 
+	 * @param parents The set of parents that a two opt neighbourhood will be generated
+	 * 		 		  from, and subsequently the new generation will be taken from.
+	 */
+	public void twoOptGeneration(ArrayList<Expression> parents) {
+		ArrayList<Expression> pool = new ArrayList<>();
+
+		// For each parent, add the two opt neighbourhood to the pool to choose from
+		for (int i = 0; i < parents.size(); i++) {
+			pool.addAll(twoOptNeighbourhood(parents.get(i)));
+		}
+		Collections.sort(pool);
+		population.clear();
+		int index = 0;
+		if (ELITISM) {
+			population.add(pool.get(index).clone());
+			index++;
+		}
+		
+		// Get the best solutions from the neighbourhood pool
+		for (int i = index; i < POPULATION_SIZE; i++) {
+			population.add(pool.get(r.nextInt(pool.size())).clone());
+		}
+	}
+
+	/**
 	 * Simple Step evolutionary algorithm step; incorporates mutation with a probability
 	 * as well as novel parent selection: a child is generated from a parent and mutated 
 	 * with a probability - the parent and child then enter a tournament to select which
@@ -156,64 +186,11 @@ public class Engine {
 	}
 
 	/**
-	 * Perform one-point crossover, beginning at the crossover point crossPoint
-	 * for parents parentA and parentB.
-	 * 
-	 * @param crossPoint The point in which to cross the two parents over.
-	 * @param parentA The first parent Expression.
-	 * @param parentB The second parent Expression.
-	 * @return ArrayList<Expression> containing the combined children.
-	 */
-	public ArrayList<Expression> crossover(int crossPoint, 
-			Expression parentA, Expression parentB) {
-
-		// Set up the crossover elements
-		String[] first = parentA.getExpression().clone();
-		String[] second = parentB.getExpression().clone();
-		String[] childOne = first.clone();
-		String[] childTwo = second.clone();
-		ArrayList<Expression> result = new ArrayList<>();
-
-		// After the crossPoint, swap elements from parentsA and B
-		for (int i = crossPoint; i < parentA.getExpression().length; i++) {
-			childOne[i] = second[i];
-			childTwo[i] = first[i];
-		}
-
-		result.add(new Expression(childOne));
-		result.add(new Expression(childTwo));
-		result.get(0).setFitness(getExpressionAverage(result.get(0), data, actualValues));
-		result.get(1).setFitness(getExpressionAverage(result.get(1), data, actualValues));
-
-		return result;
-	}
-
-	/**
-	 * Tournament the population for the number of parents NUM_PARENTS.
-	 * 
-	 * @return ArrayList<Expression> containing the winning parents.
-	 */
-	private ArrayList<Expression> tournament() {
-		ArrayList<Expression> parents = new ArrayList<>();
-
-		// Increment index if Elitist
-		int index = 0;
-		if (ELITISM) {
-			parents.add(bestNeighbour(population).clone());
-			index++;
-		}
-		for (int i = index; i < NUM_PARENTS; i++) {
-			parents.add(population.get(r.nextInt(population.size())).clone());
-		}
-		return parents;
-	}
-
-	/**
 	 * Local Search genetic algorithm step; incorporates mutation and crossover with a
 	 * probability. A Generational approach (all elements last exactly one generation).
 	 * When <ELITISM> is true, the best solution from the previous generation persists. 
 	 */
-	private void localSearch() {
+	public void localSearch() {
 		Collections.sort(population);
 
 		ArrayList<Expression> parents = (ArrayList<Expression>) tournament().clone();
@@ -258,7 +235,7 @@ public class Engine {
 	/**
 	 * Random Search algorithm step; generates random solutions and keeps the best one.
 	 */
-	private void randomSearch() {
+	public void randomSearch() {
 
 		Collections.sort(population);
 		
@@ -275,44 +252,56 @@ public class Engine {
 	}
 	
 	/**
-	 * Two Opt Generation algorithm step; generates a two-opt neighbourhood for each of
-	 * the parents chosen, and chooses the best set of generated children to go forward
-	 * as the next generation.
+	 * Perform one-point crossover, beginning at the crossover point crossPoint
+	 * for parents parentA and parentB.
 	 * 
-	 * @param parents The set of parents that a two opt neighbourhood will be generated
-	 * 		 		  from, and subsequently the new generation will be taken from.
+	 * @param crossPoint The point in which to cross the two parents over.
+	 * @param parentA The first parent Expression.
+	 * @param parentB The second parent Expression.
+	 * @return ArrayList<Expression> containing the combined children.
 	 */
-	public void twoOptGeneration(ArrayList<Expression> parents) {
-		ArrayList<Expression> pool = new ArrayList<>();
+	private ArrayList<Expression> crossover(int crossPoint, 
+			Expression parentA, Expression parentB) {
 
-		// For each parent, add the two opt neighbourhood to the pool to choose from
-		for (int i = 0; i < parents.size(); i++) {
-			pool.addAll(twoOptNeighbourhood(parents.get(i)));
+		// Set up the crossover elements
+		String[] first = parentA.getExpression().clone();
+		String[] second = parentB.getExpression().clone();
+		String[] childOne = first.clone();
+		String[] childTwo = second.clone();
+		ArrayList<Expression> result = new ArrayList<>();
+
+		// After the crossPoint, swap elements from parentsA and B
+		for (int i = crossPoint; i < parentA.getExpression().length; i++) {
+			childOne[i] = second[i];
+			childTwo[i] = first[i];
 		}
-		Collections.sort(pool);
-		population.clear();
-		int index = 0;
-		if (ELITISM) {
-			population.add(pool.get(index).clone());
-			index++;
-		}
-		
-		// Get the best solutions from the neighbourhood pool
-		for (int i = index; i < POPULATION_SIZE; i++) {
-			population.add(pool.get(r.nextInt(pool.size())).clone());
-		}
+
+		result.add(new Expression(childOne));
+		result.add(new Expression(childTwo));
+		result.get(0).setFitness(getExpressionAverage(result.get(0), data, actualValues));
+		result.get(1).setFitness(getExpressionAverage(result.get(1), data, actualValues));
+
+		return result;
 	}
 
 	/**
-	 * Initialise the population with random solutions.
+	 * Tournament the population for the number of parents NUM_PARENTS.
+	 * 
+	 * @return ArrayList<Expression> containing the winning parents.
 	 */
-	public void initialise() {
-		population = new ArrayList<>();
+	private ArrayList<Expression> tournament() {
+		ArrayList<Expression> parents = new ArrayList<>();
 
-		for (int i = 0; i < POPULATION_SIZE; i++) {
-			population.add(new Expression(data.getDataLength()-1));	
-			population.get(i).setFitness(getExpressionAverage(population.get(i), data, actualValues));
+		// Increment index if Elitist
+		int index = 0;
+		if (ELITISM) {
+			parents.add(bestNeighbour(population).clone());
+			index++;
 		}
+		for (int i = index; i < NUM_PARENTS; i++) {
+			parents.add(population.get(r.nextInt(population.size())).clone());
+		}
+		return parents;
 	}
 
 	/**
@@ -427,6 +416,18 @@ public class Engine {
 		return Double.valueOf(result.toString());
 	}
 
+	/**
+	 * Initialise the population with random solutions.
+	 */
+	private void initialise() {
+		population = new ArrayList<>();
+
+		for (int i = 0; i < POPULATION_SIZE; i++) {
+			population.add(new Expression(data.getDataLength()-1));	
+			population.get(i).setFitness(getExpressionAverage(population.get(i), data, actualValues));
+		}
+	}
+	
 	/**
 	 * Read in and set up the data sets that the algorithms are based on.
 	 * 
