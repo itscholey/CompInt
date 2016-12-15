@@ -13,7 +13,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-public class Engine2 {
+public class Engine {
 
 	private DataSet<Double> data;
 	private ArrayList<Double> actualValues;
@@ -36,10 +36,10 @@ public class Engine2 {
 	private Scanner scanner;
 
 	public static void main(String[] args) {
-		new Engine2(); 
+		new Engine(); 
 	}
 
-	public Engine2() {
+	public Engine() {
 		Object[] train = setupData(new File(TRAIN_FILE), data, actualValues);
 		data = (DataSet<Double>) train[0]; 
 		actualValues = (ArrayList<Double>) train[1];
