@@ -55,8 +55,8 @@ public class Engine {
 	private static final int 	 	CROSSOVER_POINT = 3;
 	
 	// The files to read in the data from
-	private static final String	 	TRAIN_FILE = "C:/Users/Chloe/Downloads/cwk_train.csv";
-	private static final String  	TEST_FILE = "C:/Users/Chloe/Downloads/cwk_test.csv";
+	private static final String	 	TRAIN_FILE = "src/cw/cwk_train.csv";
+	private static final String  	TEST_FILE = "src/cw/cwk_test.csv";
 	private Random r;
 	private Scanner scanner;
 
